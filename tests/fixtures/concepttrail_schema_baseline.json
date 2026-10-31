@@ -1,0 +1,1838 @@
+{
+  "description": "Read-only catalog snapshot of the live concepttrail schema, captured 2026-10-31. Identical to db/schema/001_initial_schema.sql. Regenerate only after an approved, applied migration; never edit by hand to make a test pass.",
+  "captured_at": "2026-10-31",
+  "server_version": "18.6 (Debian 18.6-1.pgdg13+2)",
+  "vector_extension_version": "0.8.7",
+  "schema": "concepttrail",
+  "tables": {
+    "attempts": {
+      "columns": [
+        [
+          "attempt_id",
+          "uuid",
+          false
+        ],
+        [
+          "learner_id",
+          "uuid",
+          true
+        ],
+        [
+          "question_id",
+          "character varying",
+          true
+        ],
+        [
+          "question_version",
+          "integer",
+          true
+        ],
+        [
+          "submitted_answer",
+          "jsonb",
+          true
+        ],
+        [
+          "scored_correct",
+          "boolean",
+          true
+        ],
+        [
+          "score",
+          "numeric",
+          true
+        ],
+        [
+          "score_method",
+          "character varying",
+          true
+        ],
+        [
+          "hint_tier",
+          "smallint",
+          true
+        ],
+        [
+          "attempted_at",
+          "timestamp with time zone",
+          true
+        ],
+        [
+          "idempotency_key",
+          "character varying",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "attempts_pkey",
+        "columns": [
+          "attempt_id"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "attempts_learner_id_fkey",
+          "columns": [
+            "learner_id"
+          ],
+          "referred_table": "learners",
+          "referred_columns": [
+            "learner_id"
+          ]
+        },
+        {
+          "name": "attempts_question_id_fkey",
+          "columns": [
+            "question_id"
+          ],
+          "referred_table": "questions",
+          "referred_columns": [
+            "question_id"
+          ]
+        }
+      ],
+      "unique_constraints": [
+        {
+          "name": "attempts_idempotency_key_key",
+          "columns": [
+            "idempotency_key"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_attempts_learner",
+          "columns": [
+            "learner_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_attempts_question",
+          "columns": [
+            "question_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "bkt_config_version": {
+      "columns": [
+        [
+          "bkt_config_version",
+          "character varying",
+          false
+        ],
+        [
+          "parameters",
+          "jsonb",
+          true
+        ],
+        [
+          "effective_at",
+          "timestamp with time zone",
+          true
+        ],
+        [
+          "created_at",
+          "timestamp with time zone",
+          true
+        ],
+        [
+          "notes",
+          "text",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "bkt_config_version_pkey",
+        "columns": [
+          "bkt_config_version"
+        ]
+      },
+      "foreign_keys": [],
+      "unique_constraints": [],
+      "indexes": []
+    },
+    "class_enrollments": {
+      "columns": [
+        [
+          "enrollment_id",
+          "uuid",
+          false
+        ],
+        [
+          "learner_id",
+          "uuid",
+          true
+        ],
+        [
+          "classroom_id",
+          "uuid",
+          true
+        ],
+        [
+          "enrolled_at",
+          "timestamp with time zone",
+          true
+        ],
+        [
+          "ended_at",
+          "timestamp with time zone",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "class_enrollments_pkey",
+        "columns": [
+          "enrollment_id"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "class_enrollments_classroom_id_fkey",
+          "columns": [
+            "classroom_id"
+          ],
+          "referred_table": "classroom",
+          "referred_columns": [
+            "classroom_id"
+          ]
+        },
+        {
+          "name": "class_enrollments_learner_id_fkey",
+          "columns": [
+            "learner_id"
+          ],
+          "referred_table": "learners",
+          "referred_columns": [
+            "learner_id"
+          ]
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [
+        {
+          "name": "idx_class_enrollments_classroom",
+          "columns": [
+            "classroom_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_class_enrollments_learner",
+          "columns": [
+            "learner_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "classroom": {
+      "columns": [
+        [
+          "classroom_id",
+          "uuid",
+          false
+        ],
+        [
+          "grade_level",
+          "smallint",
+          true
+        ],
+        [
+          "section_label",
+          "character varying",
+          true
+        ],
+        [
+          "academic_session",
+          "character varying",
+          true
+        ],
+        [
+          "school_label",
+          "character varying",
+          true
+        ],
+        [
+          "active",
+          "boolean",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "classroom_pkey",
+        "columns": [
+          "classroom_id"
+        ]
+      },
+      "foreign_keys": [],
+      "unique_constraints": [],
+      "indexes": []
+    },
+    "content_unit": {
+      "columns": [
+        [
+          "content_unit_id",
+          "character varying",
+          false
+        ],
+        [
+          "source_id",
+          "character varying",
+          true
+        ],
+        [
+          "item_id",
+          "character varying",
+          true
+        ],
+        [
+          "unit_type",
+          "character varying",
+          true
+        ],
+        [
+          "title",
+          "text",
+          true
+        ],
+        [
+          "content_text",
+          "text",
+          true
+        ],
+        [
+          "pdf_page_index",
+          "integer",
+          true
+        ],
+        [
+          "printed_page_label",
+          "character varying",
+          true
+        ],
+        [
+          "asset_refs",
+          "jsonb",
+          true
+        ],
+        [
+          "content_sha256",
+          "character varying",
+          true
+        ],
+        [
+          "extraction_status",
+          "character varying",
+          true
+        ],
+        [
+          "review_status",
+          "character varying",
+          true
+        ],
+        [
+          "pipeline_version",
+          "character varying",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "content_unit_pkey",
+        "columns": [
+          "content_unit_id"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "content_unit_item_id_fkey",
+          "columns": [
+            "item_id"
+          ],
+          "referred_table": "curriculum_item",
+          "referred_columns": [
+            "item_id"
+          ]
+        },
+        {
+          "name": "content_unit_source_id_fkey",
+          "columns": [
+            "source_id"
+          ],
+          "referred_table": "source_document",
+          "referred_columns": [
+            "source_id"
+          ]
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [
+        {
+          "name": "idx_content_unit_item",
+          "columns": [
+            "item_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_content_unit_source",
+          "columns": [
+            "source_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "content_unit_kcs": {
+      "columns": [
+        [
+          "content_unit_id",
+          "character varying",
+          false
+        ],
+        [
+          "kc_id",
+          "character varying",
+          false
+        ],
+        [
+          "mapping_role",
+          "character varying",
+          true
+        ],
+        [
+          "mapping_confidence",
+          "numeric",
+          true
+        ],
+        [
+          "review_status",
+          "character varying",
+          true
+        ],
+        [
+          "created_at",
+          "timestamp with time zone",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "content_unit_kcs_pkey",
+        "columns": [
+          "content_unit_id",
+          "kc_id"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "content_unit_kcs_content_unit_id_fkey",
+          "columns": [
+            "content_unit_id"
+          ],
+          "referred_table": "content_unit",
+          "referred_columns": [
+            "content_unit_id"
+          ]
+        },
+        {
+          "name": "content_unit_kcs_kc_id_fkey",
+          "columns": [
+            "kc_id"
+          ],
+          "referred_table": "knowledge_component",
+          "referred_columns": [
+            "kc_id"
+          ]
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": []
+    },
+    "curriculum_item": {
+      "columns": [
+        [
+          "item_id",
+          "character varying",
+          false
+        ],
+        [
+          "curriculum_version_id",
+          "character varying",
+          true
+        ],
+        [
+          "subject_id",
+          "character varying",
+          true
+        ],
+        [
+          "parent_item_id",
+          "character varying",
+          true
+        ],
+        [
+          "item_type",
+          "character varying",
+          true
+        ],
+        [
+          "title",
+          "text",
+          true
+        ],
+        [
+          "sequence_label",
+          "character varying",
+          true
+        ],
+        [
+          "learning_objectives",
+          "jsonb",
+          true
+        ],
+        [
+          "status",
+          "character varying",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "curriculum_item_pkey",
+        "columns": [
+          "item_id"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "curriculum_item_curriculum_version_id_fkey",
+          "columns": [
+            "curriculum_version_id"
+          ],
+          "referred_table": "curriculum_version",
+          "referred_columns": [
+            "curriculum_version_id"
+          ]
+        },
+        {
+          "name": "curriculum_item_parent_item_id_fkey",
+          "columns": [
+            "parent_item_id"
+          ],
+          "referred_table": "curriculum_item",
+          "referred_columns": [
+            "item_id"
+          ]
+        },
+        {
+          "name": "curriculum_item_subject_id_fkey",
+          "columns": [
+            "subject_id"
+          ],
+          "referred_table": "subject",
+          "referred_columns": [
+            "subject_id"
+          ]
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [
+        {
+          "name": "idx_curriculum_item_curriculum_version",
+          "columns": [
+            "curriculum_version_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_curriculum_item_parent",
+          "columns": [
+            "parent_item_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_curriculum_item_subject",
+          "columns": [
+            "subject_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "curriculum_version": {
+      "columns": [
+        [
+          "curriculum_version_id",
+          "character varying",
+          false
+        ],
+        [
+          "board",
+          "character varying",
+          true
+        ],
+        [
+          "academic_session",
+          "character varying",
+          true
+        ],
+        [
+          "class_level",
+          "smallint",
+          true
+        ],
+        [
+          "course_or_language",
+          "character varying",
+          true
+        ],
+        [
+          "source_url",
+          "text",
+          true
+        ],
+        [
+          "verified_at",
+          "timestamp with time zone",
+          true
+        ],
+        [
+          "status",
+          "character varying",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "curriculum_version_pkey",
+        "columns": [
+          "curriculum_version_id"
+        ]
+      },
+      "foreign_keys": [],
+      "unique_constraints": [],
+      "indexes": []
+    },
+    "embedding_chunk": {
+      "columns": [
+        [
+          "chunk_id",
+          "uuid",
+          false
+        ],
+        [
+          "content_unit_id",
+          "character varying",
+          true
+        ],
+        [
+          "chunk_order",
+          "integer",
+          true
+        ],
+        [
+          "chunk_text",
+          "text",
+          true
+        ],
+        [
+          "token_count",
+          "integer",
+          true
+        ],
+        [
+          "embedding_model_id",
+          "character varying",
+          true
+        ],
+        [
+          "embedding",
+          "vector",
+          true
+        ],
+        [
+          "index_generation",
+          "character varying",
+          true
+        ],
+        [
+          "created_at",
+          "timestamp with time zone",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "embedding_chunk_pkey",
+        "columns": [
+          "chunk_id"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "embedding_chunk_content_unit_id_fkey",
+          "columns": [
+            "content_unit_id"
+          ],
+          "referred_table": "content_unit",
+          "referred_columns": [
+            "content_unit_id"
+          ]
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [
+        {
+          "name": "idx_embedding_chunk_content_unit",
+          "columns": [
+            "content_unit_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "ingestion_job": {
+      "columns": [
+        [
+          "job_id",
+          "uuid",
+          false
+        ],
+        [
+          "job_type",
+          "character varying",
+          true
+        ],
+        [
+          "pipeline_version",
+          "character varying",
+          true
+        ],
+        [
+          "status",
+          "character varying",
+          true
+        ],
+        [
+          "created_at",
+          "timestamp with time zone",
+          true
+        ],
+        [
+          "started_at",
+          "timestamp with time zone",
+          true
+        ],
+        [
+          "finished_at",
+          "timestamp with time zone",
+          true
+        ],
+        [
+          "created_by",
+          "uuid",
+          true
+        ],
+        [
+          "error_summary",
+          "text",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "ingestion_job_pkey",
+        "columns": [
+          "job_id"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "ingestion_job_created_by_fkey",
+          "columns": [
+            "created_by"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "user_id"
+          ]
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [
+        {
+          "name": "idx_ingestion_job_created_by",
+          "columns": [
+            "created_by"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "ingestion_job_documents": {
+      "columns": [
+        [
+          "job_id",
+          "uuid",
+          false
+        ],
+        [
+          "source_id",
+          "character varying",
+          false
+        ],
+        [
+          "document_status",
+          "character varying",
+          true
+        ],
+        [
+          "started_at",
+          "timestamp with time zone",
+          true
+        ],
+        [
+          "finished_at",
+          "timestamp with time zone",
+          true
+        ],
+        [
+          "error_summary",
+          "text",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "ingestion_job_documents_pkey",
+        "columns": [
+          "job_id",
+          "source_id"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "ingestion_job_documents_job_id_fkey",
+          "columns": [
+            "job_id"
+          ],
+          "referred_table": "ingestion_job",
+          "referred_columns": [
+            "job_id"
+          ]
+        },
+        {
+          "name": "ingestion_job_documents_source_id_fkey",
+          "columns": [
+            "source_id"
+          ],
+          "referred_table": "source_document",
+          "referred_columns": [
+            "source_id"
+          ]
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [
+        {
+          "name": "idx_ingestion_job_documents_source",
+          "columns": [
+            "source_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "kc_curriculum_map": {
+      "columns": [
+        [
+          "kc_id",
+          "character varying",
+          false
+        ],
+        [
+          "item_id",
+          "character varying",
+          false
+        ],
+        [
+          "mapping_role",
+          "character varying",
+          true
+        ],
+        [
+          "review_status",
+          "character varying",
+          true
+        ],
+        [
+          "created_at",
+          "timestamp with time zone",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "kc_curriculum_map_pkey",
+        "columns": [
+          "kc_id",
+          "item_id"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "kc_curriculum_map_item_id_fkey",
+          "columns": [
+            "item_id"
+          ],
+          "referred_table": "curriculum_item",
+          "referred_columns": [
+            "item_id"
+          ]
+        },
+        {
+          "name": "kc_curriculum_map_kc_id_fkey",
+          "columns": [
+            "kc_id"
+          ],
+          "referred_table": "knowledge_component",
+          "referred_columns": [
+            "kc_id"
+          ]
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": []
+    },
+    "kc_edge": {
+      "columns": [
+        [
+          "prerequisite_kc_id",
+          "character varying",
+          false
+        ],
+        [
+          "dependent_kc_id",
+          "character varying",
+          false
+        ],
+        [
+          "strength",
+          "smallint",
+          true
+        ],
+        [
+          "reason",
+          "text",
+          true
+        ],
+        [
+          "review_status",
+          "character varying",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "kc_edge_pkey",
+        "columns": [
+          "prerequisite_kc_id",
+          "dependent_kc_id"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "kc_edge_dependent_kc_id_fkey",
+          "columns": [
+            "dependent_kc_id"
+          ],
+          "referred_table": "knowledge_component",
+          "referred_columns": [
+            "kc_id"
+          ]
+        },
+        {
+          "name": "kc_edge_prerequisite_kc_id_fkey",
+          "columns": [
+            "prerequisite_kc_id"
+          ],
+          "referred_table": "knowledge_component",
+          "referred_columns": [
+            "kc_id"
+          ]
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": []
+    },
+    "knowledge_component": {
+      "columns": [
+        [
+          "kc_id",
+          "character varying",
+          false
+        ],
+        [
+          "subject_id",
+          "character varying",
+          true
+        ],
+        [
+          "stable_key",
+          "character varying",
+          true
+        ],
+        [
+          "name",
+          "character varying",
+          true
+        ],
+        [
+          "description",
+          "text",
+          true
+        ],
+        [
+          "kc_type",
+          "character varying",
+          true
+        ],
+        [
+          "difficulty_tier",
+          "smallint",
+          true
+        ],
+        [
+          "misconceptions",
+          "jsonb",
+          true
+        ],
+        [
+          "review_status",
+          "character varying",
+          true
+        ],
+        [
+          "content_version",
+          "character varying",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "knowledge_component_pkey",
+        "columns": [
+          "kc_id"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "knowledge_component_subject_id_fkey",
+          "columns": [
+            "subject_id"
+          ],
+          "referred_table": "subject",
+          "referred_columns": [
+            "subject_id"
+          ]
+        }
+      ],
+      "unique_constraints": [
+        {
+          "name": "knowledge_component_stable_key_key",
+          "columns": [
+            "stable_key"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_knowledge_component_subject",
+          "columns": [
+            "subject_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "learners": {
+      "columns": [
+        [
+          "learner_id",
+          "uuid",
+          false
+        ],
+        [
+          "user_id",
+          "uuid",
+          true
+        ],
+        [
+          "display_name",
+          "character varying",
+          true
+        ],
+        [
+          "created_at",
+          "timestamp with time zone",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "learners_pkey",
+        "columns": [
+          "learner_id"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "learners_user_id_fkey",
+          "columns": [
+            "user_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "user_id"
+          ]
+        }
+      ],
+      "unique_constraints": [
+        {
+          "name": "learners_user_id_key",
+          "columns": [
+            "user_id"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    "note": {
+      "columns": [
+        [
+          "note_id",
+          "uuid",
+          false
+        ],
+        [
+          "kc_id",
+          "character varying",
+          true
+        ],
+        [
+          "title",
+          "text",
+          true
+        ],
+        [
+          "content_markdown",
+          "text",
+          true
+        ],
+        [
+          "language",
+          "character varying",
+          true
+        ],
+        [
+          "note_type",
+          "character varying",
+          true
+        ],
+        [
+          "recipe_version",
+          "character varying",
+          true
+        ],
+        [
+          "model_id",
+          "character varying",
+          true
+        ],
+        [
+          "prompt_version",
+          "character varying",
+          true
+        ],
+        [
+          "content_version",
+          "character varying",
+          true
+        ],
+        [
+          "review_status",
+          "character varying",
+          true
+        ],
+        [
+          "approved_by",
+          "uuid",
+          true
+        ],
+        [
+          "approved_at",
+          "timestamp with time zone",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "note_pkey",
+        "columns": [
+          "note_id"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "fk_note_approved_by",
+          "columns": [
+            "approved_by"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "user_id"
+          ]
+        },
+        {
+          "name": "note_kc_id_fkey",
+          "columns": [
+            "kc_id"
+          ],
+          "referred_table": "knowledge_component",
+          "referred_columns": [
+            "kc_id"
+          ]
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [
+        {
+          "name": "idx_note_kc",
+          "columns": [
+            "kc_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "question_kcs": {
+      "columns": [
+        [
+          "question_id",
+          "character varying",
+          false
+        ],
+        [
+          "kc_id",
+          "character varying",
+          false
+        ],
+        [
+          "weight",
+          "numeric",
+          true
+        ],
+        [
+          "mapping_role",
+          "character varying",
+          true
+        ],
+        [
+          "review_status",
+          "character varying",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "question_kcs_pkey",
+        "columns": [
+          "question_id",
+          "kc_id"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "question_kcs_kc_id_fkey",
+          "columns": [
+            "kc_id"
+          ],
+          "referred_table": "knowledge_component",
+          "referred_columns": [
+            "kc_id"
+          ]
+        },
+        {
+          "name": "question_kcs_question_id_fkey",
+          "columns": [
+            "question_id"
+          ],
+          "referred_table": "questions",
+          "referred_columns": [
+            "question_id"
+          ]
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": []
+    },
+    "question_options": {
+      "columns": [
+        [
+          "option_id",
+          "uuid",
+          false
+        ],
+        [
+          "question_id",
+          "character varying",
+          true
+        ],
+        [
+          "option_key",
+          "character varying",
+          true
+        ],
+        [
+          "option_text",
+          "text",
+          true
+        ],
+        [
+          "is_correct",
+          "boolean",
+          true
+        ],
+        [
+          "explanation",
+          "text",
+          true
+        ],
+        [
+          "display_order",
+          "smallint",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "question_options_pkey",
+        "columns": [
+          "option_id"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "question_options_question_id_fkey",
+          "columns": [
+            "question_id"
+          ],
+          "referred_table": "questions",
+          "referred_columns": [
+            "question_id"
+          ]
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [
+        {
+          "name": "idx_question_options_question",
+          "columns": [
+            "question_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "questions": {
+      "columns": [
+        [
+          "question_id",
+          "character varying",
+          false
+        ],
+        [
+          "item_type",
+          "character varying",
+          true
+        ],
+        [
+          "stem",
+          "text",
+          true
+        ],
+        [
+          "expected_answer",
+          "jsonb",
+          true
+        ],
+        [
+          "rubric",
+          "jsonb",
+          true
+        ],
+        [
+          "difficulty",
+          "smallint",
+          true
+        ],
+        [
+          "misconception_map",
+          "jsonb",
+          true
+        ],
+        [
+          "source_refs",
+          "jsonb",
+          true
+        ],
+        [
+          "verification",
+          "jsonb",
+          true
+        ],
+        [
+          "review_status",
+          "character varying",
+          true
+        ],
+        [
+          "version",
+          "integer",
+          true
+        ],
+        [
+          "active",
+          "boolean",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "questions_pkey",
+        "columns": [
+          "question_id"
+        ]
+      },
+      "foreign_keys": [],
+      "unique_constraints": [],
+      "indexes": []
+    },
+    "role": {
+      "columns": [
+        [
+          "role_code",
+          "character varying",
+          false
+        ],
+        [
+          "description",
+          "text",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "role_pkey",
+        "columns": [
+          "role_code"
+        ]
+      },
+      "foreign_keys": [],
+      "unique_constraints": [],
+      "indexes": []
+    },
+    "source_document": {
+      "columns": [
+        [
+          "source_id",
+          "character varying",
+          false
+        ],
+        [
+          "subject_id",
+          "character varying",
+          true
+        ],
+        [
+          "curriculum_version_id",
+          "character varying",
+          true
+        ],
+        [
+          "title",
+          "text",
+          true
+        ],
+        [
+          "source_url",
+          "text",
+          true
+        ],
+        [
+          "publisher",
+          "text",
+          true
+        ],
+        [
+          "edition_label",
+          "character varying",
+          true
+        ],
+        [
+          "acquired_at",
+          "timestamp with time zone",
+          true
+        ],
+        [
+          "sha256",
+          "character varying",
+          true
+        ],
+        [
+          "rights_status",
+          "character varying",
+          true
+        ],
+        [
+          "permitted_uses",
+          "jsonb",
+          true
+        ],
+        [
+          "permission_reference",
+          "text",
+          true
+        ],
+        [
+          "last_verified_at",
+          "timestamp with time zone",
+          true
+        ],
+        [
+          "status",
+          "character varying",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "source_document_pkey",
+        "columns": [
+          "source_id"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "source_document_curriculum_version_id_fkey",
+          "columns": [
+            "curriculum_version_id"
+          ],
+          "referred_table": "curriculum_version",
+          "referred_columns": [
+            "curriculum_version_id"
+          ]
+        },
+        {
+          "name": "source_document_subject_id_fkey",
+          "columns": [
+            "subject_id"
+          ],
+          "referred_table": "subject",
+          "referred_columns": [
+            "subject_id"
+          ]
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [
+        {
+          "name": "idx_source_document_curriculum_version",
+          "columns": [
+            "curriculum_version_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_source_document_subject",
+          "columns": [
+            "subject_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "student_kc_state": {
+      "columns": [
+        [
+          "learner_id",
+          "uuid",
+          false
+        ],
+        [
+          "kc_id",
+          "character varying",
+          false
+        ],
+        [
+          "mastery_probability",
+          "double precision",
+          true
+        ],
+        [
+          "bkt_config_version",
+          "character varying",
+          true
+        ],
+        [
+          "updated_at",
+          "timestamp with time zone",
+          true
+        ],
+        [
+          "evidence_count",
+          "integer",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "student_kc_state_pkey",
+        "columns": [
+          "learner_id",
+          "kc_id"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "student_kc_state_bkt_config_version_fkey",
+          "columns": [
+            "bkt_config_version"
+          ],
+          "referred_table": "bkt_config_version",
+          "referred_columns": [
+            "bkt_config_version"
+          ]
+        },
+        {
+          "name": "student_kc_state_kc_id_fkey",
+          "columns": [
+            "kc_id"
+          ],
+          "referred_table": "knowledge_component",
+          "referred_columns": [
+            "kc_id"
+          ]
+        },
+        {
+          "name": "student_kc_state_learner_id_fkey",
+          "columns": [
+            "learner_id"
+          ],
+          "referred_table": "learners",
+          "referred_columns": [
+            "learner_id"
+          ]
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [
+        {
+          "name": "idx_student_kc_state_kc",
+          "columns": [
+            "kc_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "subject": {
+      "columns": [
+        [
+          "subject_id",
+          "character varying",
+          false
+        ],
+        [
+          "display_name",
+          "character varying",
+          true
+        ],
+        [
+          "subject_family",
+          "character varying",
+          true
+        ],
+        [
+          "active",
+          "boolean",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "subject_pkey",
+        "columns": [
+          "subject_id"
+        ]
+      },
+      "foreign_keys": [],
+      "unique_constraints": [],
+      "indexes": []
+    },
+    "teacher_class_assignments": {
+      "columns": [
+        [
+          "classroom_id",
+          "uuid",
+          false
+        ],
+        [
+          "user_id",
+          "uuid",
+          false
+        ],
+        [
+          "assigned_role",
+          "character varying",
+          true
+        ],
+        [
+          "assigned_at",
+          "timestamp with time zone",
+          true
+        ],
+        [
+          "ended_at",
+          "timestamp with time zone",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "teacher_class_assignments_pkey",
+        "columns": [
+          "classroom_id",
+          "user_id"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "teacher_class_assignments_classroom_id_fkey",
+          "columns": [
+            "classroom_id"
+          ],
+          "referred_table": "classroom",
+          "referred_columns": [
+            "classroom_id"
+          ]
+        },
+        {
+          "name": "teacher_class_assignments_user_id_fkey",
+          "columns": [
+            "user_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "user_id"
+          ]
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [
+        {
+          "name": "idx_teacher_class_assignments_user",
+          "columns": [
+            "user_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    "user_roles": {
+      "columns": [
+        [
+          "user_id",
+          "uuid",
+          false
+        ],
+        [
+          "role_code",
+          "character varying",
+          false
+        ],
+        [
+          "assigned_at",
+          "timestamp with time zone",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "user_roles_pkey",
+        "columns": [
+          "user_id",
+          "role_code"
+        ]
+      },
+      "foreign_keys": [
+        {
+          "name": "user_roles_role_code_fkey",
+          "columns": [
+            "role_code"
+          ],
+          "referred_table": "role",
+          "referred_columns": [
+            "role_code"
+          ]
+        },
+        {
+          "name": "user_roles_user_id_fkey",
+          "columns": [
+            "user_id"
+          ],
+          "referred_table": "users",
+          "referred_columns": [
+            "user_id"
+          ]
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": []
+    },
+    "users": {
+      "columns": [
+        [
+          "user_id",
+          "uuid",
+          false
+        ],
+        [
+          "login_identifier",
+          "character varying",
+          true
+        ],
+        [
+          "password_hash",
+          "text",
+          true
+        ],
+        [
+          "is_active",
+          "boolean",
+          true
+        ],
+        [
+          "created_at",
+          "timestamp with time zone",
+          true
+        ],
+        [
+          "updated_at",
+          "timestamp with time zone",
+          true
+        ]
+      ],
+      "primary_key": {
+        "name": "users_pkey",
+        "columns": [
+          "user_id"
+        ]
+      },
+      "foreign_keys": [],
+      "unique_constraints": [
+        {
+          "name": "users_login_identifier_key",
+          "columns": [
+            "login_identifier"
+          ]
+        }
+      ],
+      "indexes": []
+    }
+  }
+}

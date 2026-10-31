@@ -1,0 +1,92 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+CLAUDE.local.md
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local databases and vector stores
+*.db
+*.sqlite
+storage/
+
+# Model/cache artifacts
+.cache/
+.huggingface/
+models/
+checkpoints/
+*.safetensors
+*.pt
+*.pth
+
+# Logs and OS/editor files
+*.log
+.DS_Store
+Thumbs.db
+.vscode/*.local.json
+
+# User-provided resource drop-zones (never commit source PDFs or teammate exports)
+resources/textbook_pdfs/**
+!resources/textbook_pdfs/README.md
+!resources/textbook_pdfs/.gitkeep
+resources/teammate_csv/incoming/**
+!resources/teammate_csv/incoming/README.md
+!resources/teammate_csv/incoming/.gitkeep
+
+# Generated CSV profile/cleaning artifacts are private/local
+data_pipeline/data/raw/**
+data_pipeline/data/interim/**
+data_pipeline/data/processed/**
+data_pipeline/data/logs/**
+!data_pipeline/data/**/
+!data_pipeline/data/**/README.md
+!data_pipeline/data/**/.gitkeep
+
+# Teammate CSV cleaning outputs and merge proposals are generated, private artifacts
+resources/teammate_csv/processed/**
+!resources/teammate_csv/processed/README.md
+resources/teammate_csv/mappings/**
+!resources/teammate_csv/mappings/README.md
+
+# Private owner decisions, authorization records and generated review evidence
+data_pipeline/data/overrides/**
+!data_pipeline/data/overrides/
+!data_pipeline/data/overrides/**/
+!data_pipeline/data/overrides/**/README.md
+!data_pipeline/data/overrides/**/.gitkeep
+
+# Database backup files
+*.dump
+*.backup
+*.pgdump
+*.sql.gz
+
+# Local editor and generated package metadata
+.vscode/
+concepttrail.egg-info/
+.DS_Store
+PACKAGE_CONTENTS.txt
+PACKAGE_MANIFEST.json
+
+# Internal project reports and owner decision records
+docs/reports/
+docs/DECISIONS.md
+docs/SOURCE_AUDIT.md
+
+# Unfinished Phase 4 reconciliation implementation
+data_pipeline/teacher_validation.py
+
+# Generated curriculum and question-bank datasets: publish only after review
+data_pipeline/data/final/**
+!data_pipeline/data/final/README.md
+!data_pipeline/data/final/.gitkeep

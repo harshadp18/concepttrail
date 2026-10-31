@@ -1,0 +1,24 @@
+services:
+  db:
+    image: pgvector/pgvector:0.8.7-pg18-trixie
+    container_name: concepttrail-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-concepttrail_db}
+      POSTGRES_USER: ${POSTGRES_USER:-concepttrail_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in local .env}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - concepttrail_pgdata:/var/lib/postgresql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  concepttrail_pgdata:
+    name: concepttrail_pgdata

@@ -1,0 +1,1 @@
+"""ConceptTrail application package."""

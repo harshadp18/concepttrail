@@ -1,0 +1,54 @@
+# Pipeline configuration only. Source inventory lives only in curriculum.csv.
+pipeline:
+  version: "0.1.0"
+  fail_on_unknown_rights: true
+  preserve_raw_artifacts: true
+
+extraction:
+  pdf_engine: "pymupdf"
+  min_text_characters_per_page: 40
+  preserve_pdf_page_index: true
+  preserve_printed_page_label_when_available: true
+  ocr_only_flagged_pages: true
+
+ocr:
+  # Enabled 2026-10-31 after verifying local Tesseract 5.5.4 with eng/hin traineddata
+  # (tesseract-lang 4.1.0). Local only; applied to OCR-candidate pages only (D-035).
+  enabled: true
+  engine: "tesseract"
+  dpi: 300
+  languages: ["eng", "hin"]  # approved packs; Hindi pages use hin+eng, never eng alone
+
+devanagari_repair:
+  # D-044, owner-approved 2026-10-31: drop a Devanagari code point repeated at the same
+  # glyph origin (font ToUnicode defect). Normalised text only; raw text never changes.
+  rule: "D-044"
+  source_ids: ["SRC-C09-HIN-IHGA1-02"]
+
+chunking:
+  strategy: "structure_aware"
+  target_tokens: 700  # pilot starting point; benchmark by subject and model
+  overlap_tokens: 100 # pilot starting point; benchmark; do not split tables/equations
+
+publishing:
+  require_source_rights: true
+  require_validation: true
+  require_human_review_for_flagged_content: true
+  generate_versioned_index: true
+
+
+# CSV cleaning defaults are deliberately conservative. Field-specific null tokens,
+# mappings and duplicate policies must be reviewed per dataset/run.
+csv_cleaning:
+  default_encoding: utf-8-sig
+  output_encoding: utf-8
+  preserve_headers: true
+  preserve_column_order: true
+  read_identifiers_as_strings: true
+  trim_outer_whitespace: true
+  normalize_internal_whitespace: false
+  auto_correct_factual_values: false
+  near_duplicate_action: flag_for_review
+  exact_duplicate_action: quarantine_extra_occurrences
+  require_row_reconciliation: true
+  compare_to_pdfs_requires_permitted_processing: true
