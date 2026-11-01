@@ -61,7 +61,7 @@ Schema lifecycle for the `concepttrail` PostgreSQL schema. Every schema change g
 
 ## Creating a new migration
 
-1. Change `app/db/models.py`, and record the decision in `docs/DECISIONS.md` (owner approval is required for any schema change).
+1. Change `app/db/models.py`, and record the decision in `docs/PUBLIC_DECISIONS.md` (owner approval is required for any schema change).
 2. Start a disposable database (below) and bring it to head:
 
    ```bash

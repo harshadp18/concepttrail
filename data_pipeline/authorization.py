@@ -19,6 +19,7 @@ embeddings or answer generation are not granted by either record.
 
     python -m data_pipeline.authorization record-owner-local-processing
     python -m data_pipeline.authorization record-owner-project-use
+    python -m data_pipeline.authorization record-owner-project-use --wording-file PRIVATE.json
 """
 
 from __future__ import annotations
@@ -27,13 +28,20 @@ import argparse
 import csv
 import hashlib
 import json
+import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-AUTHORIZATION_DIR = PROJECT_ROOT / "data_pipeline/data/overrides/authorizations"
+# Overridable so a container can mount the private records read-only at a fixed path.
+AUTHORIZATION_DIR = Path(
+    os.environ.get(
+        "CONCEPTTRAIL_AUTHORIZATION_DIR",
+        str(PROJECT_ROOT / "data_pipeline/data/overrides/authorizations"),
+    )
+)
 CLEANED_INVENTORY = (
     PROJECT_ROOT / "resources/teammate_csv/processed/cleaned/curriculum_inventory.cleaned.csv"
 )
@@ -67,9 +75,18 @@ EXTERNAL_OR_RESTRICTED_USES = (
     "model_training_or_fine_tuning",
 )
 
+# Phase 5 local drafting with Qwen through Ollama (D17). Granted by neither existing record:
+# only a separate owner record naming these uses can permit them.
+DRAFTING_USES = ("local_llm_kc_drafting", "local_llm_prerequisite_edge_drafting")
+# Local Qwen question drafting and evidence-grounded explanation generation from textbook
+# content. Neither is implied by objective drafting or by indexing; no record grants them.
+GENERATION_USES = ("local_llm_question_drafting", "local_llm_explanation_generation")
+
 # Refused by the gate even if a record lists them: they need a dedicated authorisation.
 SEPARATE_AUTHORIZATION_ONLY = ("model_training_or_fine_tuning", "redistribution")
-KNOWN_USES = frozenset(LOCAL_USES + PROJECT_USES + EXTERNAL_OR_RESTRICTED_USES)
+KNOWN_USES = frozenset(
+    LOCAL_USES + PROJECT_USES + EXTERNAL_OR_RESTRICTED_USES + DRAFTING_USES + GENERATION_USES
+)
 
 OWNER_LOCAL_RECORD_ID = "AUTH-2026-10-31-owner-local-hackathon-processing"
 OWNER_PROJECT_RECORD_ID = "AUTH-2026-10-31-owner-project-use"
@@ -83,8 +100,35 @@ class Decision:
     record_id: str | None = None
 
 
-def owner_local_processing_record(inventory_rows: list[dict[str, str]]) -> dict[str, Any]:
+# Public, generic wording for NEW records. The wording of the existing historical records is
+# private: it is supplied at record time from a private file (`--wording-file`), never kept in
+# published source. `check_use` never reads any of these fields.
+GENERIC_WORDING = {
+    "statement": "Owner-provided authorisation for the scope stated in this record.",
+    "evidence_reference_status": "owner_statement_only",
+    "review_status": "owner_attested",
+}
+WORDING_KEYS = frozenset({*GENERIC_WORDING, "decision_reference"})
+
+
+def resolve_wording(wording: dict[str, str] | None) -> dict[str, str]:
+    """Generic wording unless a private wording is supplied; unknown or empty keys are refused."""
+    if wording is None:
+        return dict(GENERIC_WORDING)
+    if set(wording) - WORDING_KEYS or any(
+        not isinstance(v, str) or not v for v in wording.values()
+    ):
+        raise ValueError(
+            "wording may only set non-empty string values for " + ", ".join(sorted(WORDING_KEYS))
+        )
+    return {**GENERIC_WORDING, **wording}
+
+
+def owner_local_processing_record(
+    inventory_rows: list[dict[str, str]], wording: dict[str, str] | None = None
+) -> dict[str, Any]:
     """Build the owner-attestation record for the accepted inventory rows (deterministic)."""
+    w = resolve_wording(wording)
     documents = sorted(
         ({"source_id": r["source_id"], "sha256": r["sha256"]} for r in inventory_rows),
         key=lambda d: d["source_id"],
@@ -93,10 +137,7 @@ def owner_local_processing_record(inventory_rows: list[dict[str, str]]) -> dict[
         "record_id": OWNER_LOCAL_RECORD_ID,
         "recorded_on": "2026-10-31",
         "authorization_basis": "owner_attestation",
-        "statement": (
-            "The project owner stated that the textbook documents are approved for hackathon"
-            " use and instructed that local extraction and local processing be permitted."
-        ),
+        "statement": w["statement"],
         "nature": "Owner-provided authorisation assertion; not independent legal verification.",
         "scope": "local_hackathon_processing",
         "uses": dict.fromkeys(LOCAL_USES, PERMITTED),
@@ -115,17 +156,19 @@ def owner_local_processing_record(inventory_rows: list[dict[str, str]]) -> dict[
             "Rows accepted by Phase 3 cleaning (`curriculum_inventory.cleaned.csv`). The three"
             " quarantined rows are excluded until their review issues are resolved."
         ),
-        "evidence_reference_status": "owner_statement_only; no written licence or permission"
-        " letter on file",
-        "review_status": "owner_attested_pending_rights_review",
+        "evidence_reference_status": w["evidence_reference_status"],
+        "review_status": w["review_status"],
         "document_count": len(documents),
         "documents_sha256": hashlib.sha256(json.dumps(documents).encode()).hexdigest(),
         "documents": documents,
     }
 
 
-def owner_project_use_record(inventory_rows: list[dict[str, str]]) -> dict[str, Any]:
+def owner_project_use_record(
+    inventory_rows: list[dict[str, str]], wording: dict[str, str] | None = None
+) -> dict[str, Any]:
     """The owner's confirmation of rights for the intended ConceptTrail use (deterministic)."""
+    w = resolve_wording(wording)
     documents = sorted(
         ({"source_id": r["source_id"], "sha256": r["sha256"]} for r in inventory_rows),
         key=lambda d: d["source_id"],
@@ -134,10 +177,7 @@ def owner_project_use_record(inventory_rows: list[dict[str, str]]) -> dict[str, 
         "record_id": OWNER_PROJECT_RECORD_ID,
         "recorded_on": "2026-10-31",
         "authorization_basis": "owner_attestation",
-        "statement": (
-            "I confirm that we have the rights required to use these materials for the"
-            " intended ConceptTrail project."
-        ),
+        "statement": w["statement"],
         "nature": "Owner-provided authorisation assertion; not independent legal verification.",
         "scope": "conceptrail_project_use",
         "uses": dict.fromkeys(LOCAL_USES + PROJECT_USES, PERMITTED),
@@ -187,10 +227,53 @@ def owner_project_use_record(inventory_rows: list[dict[str, str]]) -> dict[str, 
             "Rows accepted by Phase 3 cleaning (`curriculum_inventory.cleaned.csv`). The three"
             " quarantined rows are excluded until their review issues are resolved."
         ),
-        "evidence_reference_status": "owner_statement_only; no written licence or permission"
-        " letter on file",
-        "review_status": "owner_attested",
-        "decision_reference": "docs/DECISIONS.md D-050",
+        "evidence_reference_status": w["evidence_reference_status"],
+        "review_status": w["review_status"],
+        **({"decision_reference": w["decision_reference"]} if "decision_reference" in w else {}),
+        "document_count": len(documents),
+        "documents_sha256": hashlib.sha256(json.dumps(documents).encode()).hexdigest(),
+        "documents": documents,
+    }
+
+
+OWNER_DEMO_RECORD_ID = "AUTH-2026-11-01-owner-demo-content-generation"
+
+
+def owner_demo_generation_record(inventory_rows: list[dict[str, str]]) -> dict[str, Any]:
+    """The owner's instruction (2026-11-01) to generate original demo content locally.
+
+    Grants only the local-model drafting and generation uses. It is a rights record, not a
+    review: everything generated under it is AI-generated demo content, never human-approved.
+    """
+    documents = sorted(
+        ({"source_id": r["source_id"], "sha256": r["sha256"]} for r in inventory_rows),
+        key=lambda d: d["source_id"],
+    )
+    return {
+        "record_id": OWNER_DEMO_RECORD_ID,
+        "recorded_on": "2026-11-01",
+        "authorization_basis": "owner_instruction",
+        "statement": (
+            "The project owner authorised using the supplied textbook PDFs as local educational"
+            " references to generate original ConceptTrail learning content (knowledge"
+            " components, prerequisite edges, questions, explanations) for a development/demo"
+            " dataset, with the local model only."
+        ),
+        "nature": "Owner instruction given in a working session; not independent legal review.",
+        "scope": "local_development_demo_content",
+        "uses": dict.fromkeys(DRAFTING_USES + GENERATION_USES, PERMITTED),
+        "conditions": [
+            "local inference only (Ollama); no external or cloud provider",
+            "original wording; no copying of exercises or long passages",
+            "generated content is labelled AI-generated demo content and is never treated as"
+            " human-approved or production-released",
+        ],
+        "not_covered": [
+            "external_llm_processing",
+            "model_training_or_fine_tuning",
+            "redistribution",
+            "production_release_or_human_approval",
+        ],
         "document_count": len(documents),
         "documents_sha256": hashlib.sha256(json.dumps(documents).encode()).hexdigest(),
         "documents": documents,
@@ -242,6 +325,11 @@ def main(argv: list[str] | None = None) -> int:
         "command", choices=["record-owner-local-processing", "record-owner-project-use"]
     )
     parser.add_argument("--inventory", type=Path, default=CLEANED_INVENTORY)
+    parser.add_argument(
+        "--wording-file",
+        type=Path,
+        help="private JSON with wording for a legacy record; without it, generic wording is used",
+    )
     args = parser.parse_args(argv)
     with args.inventory.open(encoding="utf-8", newline="") as handle:
         rows = list(csv.DictReader(handle))
@@ -251,8 +339,11 @@ def main(argv: list[str] | None = None) -> int:
             if args.command == "record-owner-project-use"
             else owner_local_processing_record
         )
-        path = write_record(build(rows))
-    except RuntimeError as exc:
+        wording = (
+            json.loads(args.wording_file.read_text(encoding="utf-8")) if args.wording_file else None
+        )
+        path = write_record(build(rows, wording))
+    except (RuntimeError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 4
     print(f"{path.relative_to(PROJECT_ROOT)}: {len(rows)} documents")

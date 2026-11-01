@@ -8,7 +8,7 @@
 
 Implement ConceptTrail as a maintainable FastAPI modular monolith for CBSE Classes 6–10 across English, Hindi, Mathematics, Science and Social Science. The user-designated attached ConceptTrail `README.md` is the primary product/engineering context for this package. The selection PPT/deck is intentionally excluded and must not be used to introduce requirements. The root `README.md` is the executable workspace blueprint; `docs/` and module READMEs define cross-layer contracts.
 
-Read the root `README.md` completely before coding. Then read `docs/SOURCE_AUDIT.md`, `docs/DECISIONS.md`, `docs/REQUIREMENTS_TRACEABILITY.md`, and the exact target directory's `README.md`. Do not assume the project docs prove implementation status.
+Read the root `README.md` completely before coding. Then read `docs/PUBLIC_DECISIONS.md`, `docs/REQUIREMENTS_TRACEABILITY.md`, and the exact target directory's `README.md`. Do not assume the project docs prove implementation status.
 
 ## Mandatory first actions (Phase 0)
 
@@ -46,7 +46,7 @@ Read the root `README.md` completely before coding. Then read `docs/SOURCE_AUDIT
 
 - Use FastAPI, SQLAlchemy 2.x, Pydantic v2, Alembic, PostgreSQL/pgvector, NetworkX, PyMuPDF, optional Tesseract, pytest and Ruff. Verify compatibility and pin dependencies during implementation.
 - PostgreSQL is the source of truth; pgvector is the vector backend. Keep graph edges relational and use NetworkX in process.
-- Start with one approved LLM provider behind an adapter. Gemini Flash is the proposed primary; Groq-hosted GPT-OSS-120B is a disabled fallback candidate pending privacy/quality/outage tests; DeepSeek is benchmark-only until approved. Verify actual account model IDs, terms, quotas and prices. No free/unlimited claims.
+- Current provider architecture (D-055, owner decision 2026-10-31): Primary: Qwen 3.5 9B (`qwen3.5:9b`) through local Ollama. Fallback candidate: GPT-OSS 120B (`openai/gpt-oss-120b`) through Groq, **automatic fallback disabled**. Gemini and DeepSeek are not selected. The embedding model is undecided. (D-055) No Ollama or Groq adapter exists yet; typed settings and `.env.example` are configuration only. Groq external processing of textbook content or student data is **not authorised** until the owner approves the scope and the rights/retention conditions are recorded. Never enable fallback (`LLM_FALLBACK_ENABLED`) without integration, security, privacy and reliability tests plus owner approval. Verify actual model IDs, terms, quotas and prices. No free/unlimited claims. Earlier Gemini-primary and DeepSeek-benchmark proposals are historical (D-016, D-018) and superseded.
 - Fallback only on transient errors, never around safety/rights/validation/insufficient-evidence outcomes.
 - Embeddings are separate from chat generation. Do not select or invent the embedding model/dimension.
 - Multi-KC questions require KC-specific scoring evidence; do not apply one overall correctness boolean to every mapped KC.
@@ -117,7 +117,7 @@ Use commands only after the corresponding modules exist and have been inspected.
 
 ## Phased execution
 
-Follow `docs/IMPLEMENTATION_ROADMAP.md`. The grouped phases map to it: Phase 0 read-only backend/database reconnaissance; Phase 1 reproducible backend environment; Phase 2 resource intake, teammate CSV profiling/cleaning, master inventory and rights; Phase 3 PDF extraction/structuring; Phase 4 KCs/questions/import; Phase 5 embeddings/RAG/provider; Phase 6 student APIs/attempts/BKT/policy; Phase 7 teacher services/class expansion/evaluation/security/deployment. No frontend code is in scope. Do not skip phase gates.
+Follow `docs/IMPLEMENTATION_ROADMAP.md`. The grouped phases map to it: Phase 0 read-only backend/database reconnaissance; Phase 1 reproducible backend environment; Phase 2 resource intake, teammate CSV profiling/cleaning, master inventory and rights; Phase 3 PDF extraction/structuring; Phase 4 KCs/questions/import; Phase 5 embeddings/RAG/provider; Phase 6 student APIs/attempts/BKT/policy; Phase 7 teacher services/class expansion/evaluation/security/deployment. The numbered phases in `docs/IMPLEMENTATION_ROADMAP.md` (0–12) are authoritative for status and gates: roadmap Phase 5 is knowledge components and the prerequisite graph; embeddings and retrieval are roadmap Phase 7 and the LLM flow is roadmap Phase 8 (see `docs/PHASE_5_PROGRESS.md`). No frontend code is in scope. Do not skip phase gates.
 
 ## Coding and completion rules
 
@@ -127,7 +127,7 @@ Follow `docs/IMPLEMENTATION_ROADMAP.md`. The grouped phases map to it: Phase 0 r
 - Add deterministic tests for BKT/graph/policy/scoring; mock external provider calls.
 - Do not remove tests or loosen validation to make a phase pass.
 - If actual backend code or schema differs from docs, stop before destructive changes and document the evidence plus a reversible migration/change proposal. Frontend files, if present, are read-only: do not edit them.
-- Update `docs/DECISIONS.md`, `docs/REQUIREMENTS_TRACEABILITY.md`, relevant module README and tests whenever a cross-layer decision changes.
+- Update `docs/PUBLIC_DECISIONS.md` (for decisions safe to publish), `docs/REQUIREMENTS_TRACEABILITY.md`, relevant module README and tests whenever a cross-layer decision changes. Owner rights attestations and other private decisions go in the owner's private records, never in published files.
 - Report implemented vs proposed vs blocked accurately. A health endpoint or demo response is not proof of educational effectiveness.
 
 

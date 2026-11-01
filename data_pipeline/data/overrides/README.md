@@ -31,3 +31,7 @@ Consumed by `structure_content`/publish workflow; exported in QC reports.
 ### 7. Module Verification Checklist
 
 Test deterministic replay, stale-source conflict and idempotent reapplication.
+
+## Publication status
+
+Everything in `overrides/` except READMEs and `.gitkeep` is **private and Git-ignored** (`.gitignore`: `data_pipeline/data/overrides/**`). The records hold owner attestations and rights statements, so they are not published. Code that reads them (for example `teacher_validation.py`, `authorization.py`) is published; the records are supplied separately. See `docs/PUBLICATION_AND_REPRODUCIBILITY.md` for what a fresh clone can and cannot reproduce.

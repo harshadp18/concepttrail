@@ -1,0 +1,215 @@
+{
+  "config_id": "bkt-synthetic-calibration-v1",
+  "status": "EXPERIMENTAL - synthetic only, never for runtime use",
+  "label": "synthetic_calibration",
+  "note": "Parameters fitted on SYNTHETIC learners generated from made-up KC types. They show the calibration pipeline recovers known values; they say nothing about real CBSE skills. The runtime configuration remains bkt-provisional-v1 (provisional, uncalibrated) until real, consented learner data is evaluated.",
+  "generator": "evaluation.synthetic_learners (homogeneous population)",
+  "data": {
+    "reference_size": {
+      "learners_per_kc": 400,
+      "opportunities_per_learner": 15,
+      "why": "chosen from the size curve (E2): the smallest grid point where every parameter's mean error is near its plateau; see size_curve"
+    },
+    "calibration_seed_base": 1000,
+    "held_out_seed_base": 2000,
+    "seeds_per_kc_type": 5,
+    "bootstrap_reps": 30,
+    "constraints": "guess < 0.5, slip < 0.5 (identifiability)",
+    "mastery_threshold": 0.95
+  },
+  "parameters_by_synthetic_kc_type": {
+    "typical": {
+      "fitted": {
+        "p_l0": 0.2634,
+        "p_t": 0.1293,
+        "p_g": 0.1873,
+        "p_s": 0.0875
+      },
+      "bootstrap_95ci": {
+        "p_l0": [
+          0.2046,
+          0.3129
+        ],
+        "p_t": [
+          0.1155,
+          0.1457
+        ],
+        "p_g": [
+          0.1661,
+          0.2008
+        ],
+        "p_s": [
+          0.0782,
+          0.1005
+        ]
+      },
+      "generating_truth": {
+        "p_l0": 0.25,
+        "p_t": 0.12,
+        "p_g": 0.2,
+        "p_s": 0.08
+      }
+    },
+    "hard": {
+      "fitted": {
+        "p_l0": 0.0871,
+        "p_t": 0.0604,
+        "p_g": 0.1512,
+        "p_s": 0.1025
+      },
+      "bootstrap_95ci": {
+        "p_l0": [
+          0.0657,
+          0.1097
+        ],
+        "p_t": [
+          0.0527,
+          0.0712
+        ],
+        "p_g": [
+          0.1428,
+          0.1616
+        ],
+        "p_s": [
+          0.0895,
+          0.1098
+        ]
+      },
+      "generating_truth": {
+        "p_l0": 0.1,
+        "p_t": 0.06,
+        "p_g": 0.15,
+        "p_s": 0.1
+      }
+    },
+    "guessy": {
+      "fitted": {
+        "p_l0": 0.327,
+        "p_t": 0.0883,
+        "p_g": 0.3533,
+        "p_s": 0.083
+      },
+      "bootstrap_95ci": {
+        "p_l0": [
+          0.2542,
+          0.3703
+        ],
+        "p_t": [
+          0.0765,
+          0.1012
+        ],
+        "p_g": [
+          0.3327,
+          0.3776
+        ],
+        "p_s": [
+          0.0726,
+          0.0948
+        ]
+      },
+      "generating_truth": {
+        "p_l0": 0.3,
+        "p_t": 0.1,
+        "p_g": 0.35,
+        "p_s": 0.08
+      }
+    },
+    "careless": {
+      "fitted": {
+        "p_l0": 0.3554,
+        "p_t": 0.1506,
+        "p_g": 0.135,
+        "p_s": 0.1883
+      },
+      "bootstrap_95ci": {
+        "p_l0": [
+          0.3103,
+          0.3981
+        ],
+        "p_t": [
+          0.1309,
+          0.1621
+        ],
+        "p_g": [
+          0.1172,
+          0.1496
+        ],
+        "p_s": [
+          0.1786,
+          0.2002
+        ]
+      },
+      "generating_truth": {
+        "p_l0": 0.35,
+        "p_t": 0.15,
+        "p_g": 0.15,
+        "p_s": 0.18
+      }
+    },
+    "fast": {
+      "fitted": {
+        "p_l0": 0.1395,
+        "p_t": 0.3142,
+        "p_g": 0.1689,
+        "p_s": 0.0601
+      },
+      "bootstrap_95ci": {
+        "p_l0": [
+          0.0901,
+          0.1815
+        ],
+        "p_t": [
+          0.2938,
+          0.3406
+        ],
+        "p_g": [
+          0.1422,
+          0.196
+        ],
+        "p_s": [
+          0.0541,
+          0.0666
+        ]
+      },
+      "generating_truth": {
+        "p_l0": 0.15,
+        "p_t": 0.3,
+        "p_g": 0.2,
+        "p_s": 0.06
+      }
+    },
+    "high_prior": {
+      "fitted": {
+        "p_l0": 0.6072,
+        "p_t": 0.1137,
+        "p_g": 0.1881,
+        "p_s": 0.0709
+      },
+      "bootstrap_95ci": {
+        "p_l0": [
+          0.57,
+          0.6513
+        ],
+        "p_t": [
+          0.0952,
+          0.1294
+        ],
+        "p_g": [
+          0.1625,
+          0.2192
+        ],
+        "p_s": [
+          0.0641,
+          0.0773
+        ]
+      },
+      "generating_truth": {
+        "p_l0": 0.6,
+        "p_t": 0.1,
+        "p_g": 0.2,
+        "p_s": 0.07
+      }
+    }
+  },
+  "source_report_sha256": "b045d0963b271927c681721e7f10a4fa770067759d6648381bc66b1c14b90b6d"
+}

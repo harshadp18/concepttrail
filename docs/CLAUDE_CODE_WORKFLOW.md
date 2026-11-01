@@ -12,8 +12,8 @@ Claude Code uses project instructions such as root `CLAUDE.md` for persistent re
 ## 2. First prompt to Claude Code
 
 ```text
-Read CLAUDE.md and README.md, then read docs/SOURCE_AUDIT.md,
-docs/DECISIONS.md, docs/DATABASE_SCHEMA.md and the module README
+Read CLAUDE.md and README.md, then read docs/PUBLIC_DECISIONS.md,
+docs/DATABASE_SCHEMA.md and the module README
 for every area you inspect. Do not edit files or run database DDL yet.
 Inspect this repository, Python environment, Git status, current
 FastAPI/API code, ORM models, Alembic history, tests, and the actual
@@ -71,8 +71,9 @@ are scored before updating multiple mastery states.
 Implement retrieval only after an embedding model/dimension is selected
 from a benchmark. Use pgvector and hard filters for class, subject,
 curriculum version, language, publication/review and permission status.
-Add a provider-neutral Gemini-primary / Groq GPT-OSS fallback interface;
-DeepSeek stays a challenger until approved. Fallback only on transient
+Add a provider-neutral Ollama (Qwen 3.5 9B) primary / Groq GPT-OSS fallback
+interface (D-055; the earlier Gemini-primary / DeepSeek-challenger text is
+superseded). Fallback stays disabled until approved. Fallback only on transient
 provider failures. Validate structured outputs and source IDs before
 returning them. Mock providers in tests.
 ```

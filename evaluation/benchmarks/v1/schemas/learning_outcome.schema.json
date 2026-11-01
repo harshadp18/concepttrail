@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Adaptive recommendation outcome study record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "learner_pseudonym",
+    "arm",
+    "pre_assessment_id",
+    "post_assessment_id",
+    "pre_score",
+    "post_score",
+    "consent_reference"
+  ],
+  "properties": {
+    "learner_pseudonym": {
+      "type": "string"
+    },
+    "arm": {
+      "enum": [
+        "adaptive",
+        "fixed_sequence",
+        "teacher_choice"
+      ]
+    },
+    "pre_assessment_id": {
+      "type": "string"
+    },
+    "post_assessment_id": {
+      "type": "string",
+      "description": "items disjoint from every practice item and from the pre-test"
+    },
+    "pre_score": {
+      "type": "number"
+    },
+    "post_score": {
+      "type": "number"
+    },
+    "consent_reference": {
+      "type": "string"
+    }
+  }
+}

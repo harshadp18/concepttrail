@@ -24,13 +24,14 @@ import json
 from pathlib import Path
 from typing import Any
 
+from data_pipeline import owner_attestations as oa
 from data_pipeline.clean_teammate_csv import atomic_write_bytes, csv_bytes, json_bytes
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ENRICHMENT_DIR = PROJECT_ROOT / "data_pipeline/data/processed/metadata_enrichment"
 BASELINE = ENRICHMENT_DIR / "human_review_queue.baseline_2026-10-31.csv"
 BASELINE_SHA256 = "0571dd2199a668e60dda2cdd088a7dd20356138d62466eeb0f8d306a050ef805"
-TRIAGE_VERSION = "review-triage/1.1.0"
+TRIAGE_VERSION = "review-triage/1.2.0"
 OWNER_DECISIONS = (
     PROJECT_ROOT
     / "data_pipeline/data/overrides/metadata_enrichment/owner_decisions_2026-10-31.json"
@@ -55,15 +56,32 @@ def read_csv(path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(handle))
 
 
+def _page_review_covers(item: dict[str, str], d053: dict[str, Any] | None) -> bool:
+    """True if the D-053 attestation is valid and covers every page the item lists."""
+    if not d053 or d053.get("status") != "valid":
+        return False
+    pages = {int(i) for i in item["pdf_page_indexes"].split()}
+    covered = {int(index) for sid, index in d053["pages"] if sid == item["source_document_id"]}
+    return bool(pages) and pages <= covered
+
+
 def triage_item(
     item: dict[str, str],
     record: dict[str, Any],
     current: dict[str, dict[str, str]],
     owner: dict[str, Any] | None = None,
+    d053: dict[str, Any] | None = None,
 ) -> tuple[str, str, list[str]]:
     """(disposition, evidence, follow-up items) for one baseline queue row."""
     kind = item["item"].split(":")[0]
     if kind == "ocr_required":
+        if "ocr_required" not in current and _page_review_covers(item, d053):
+            return (
+                "resolved",
+                "OCR ran and every listed page is covered by the D-053 page review"
+                " (owner attestation; individual findings not recorded)",
+                [x for x in ("ocr_quality_review", "ocr_low_confidence_or_empty") if x in current],
+            )
         if "ocr_required" in current:
             return "open", "OCR still not run: " + current["ocr_required"]["reason"], []
         if "ocr_low_confidence_or_empty" in current:
@@ -74,10 +92,18 @@ def triage_item(
         return "resolved", "pages no longer OCR candidates", []
     if kind == "page_review":
         # AI-assisted visual review (D-053) is evidence, never a human review.
+        if _page_review_covers(item, d053):
+            return (
+                "resolved",
+                "all listed pages are in the D-053 page review, completed per owner"
+                " attestation; individual findings not recorded",
+                [],
+            )
         return (
             "open",
-            "human page inspection not recorded; AI-assisted findings (D-053) are in"
-            " overrides/quality_review and are not a human review",
+            "pages not covered by a valid D-053 page-review attestation"
+            + (f" ({d053['status']})" if d053 else "")
+            + "; AI-assisted findings are not a human review",
             [],
         )
     if kind == "chapter_title_check":
@@ -97,6 +123,16 @@ def triage_item(
         if status == "verified":
             return "resolved", "official objective with page evidence", []
         if status == "ai_generated":
+            if (record.get("review_completion") or {}).get(
+                "learning_objective"
+            ) == "completed_owner_attested":
+                outcome = (record.get("approval_outcome") or {}).get("learning_objective")
+                return (
+                    "resolved",
+                    "AI-generated objectives; teacher validation completed per owner attestation"
+                    f" (D-054); approval outcome: {outcome}; not individually approved",
+                    [],
+                )
             return (
                 "open",
                 "AI-generated objectives written (owner-approved D-049); pending teacher review",
@@ -125,6 +161,7 @@ def triage(
     records: list[dict[str, Any]],
     queue: list[dict[str, str]],
     owner: dict[str, Any] | None = None,
+    d053: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     by_source = {r["source_document_id"]: r for r in records}
     current: dict[str, dict[str, dict[str, str]]] = collections.defaultdict(dict)
@@ -133,7 +170,9 @@ def triage(
     rows = []
     for item in baseline:
         sid = item["source_document_id"]
-        disposition, evidence, follow_up = triage_item(item, by_source[sid], current[sid], owner)
+        disposition, evidence, follow_up = triage_item(
+            item, by_source[sid], current[sid], owner, d053
+        )
         rows.append(
             [
                 item["priority"],
@@ -176,6 +215,7 @@ def main() -> int:
     digest = hashlib.sha256(BASELINE.read_bytes()).hexdigest()
     if digest != BASELINE_SHA256:
         raise SystemExit(f"baseline queue changed: {digest}")
+    d053 = oa.verify_d053()
     result = triage(
         read_csv(BASELINE),
         json.loads((ENRICHMENT_DIR / "unified_enrichment.json").read_text(encoding="utf-8")),
@@ -183,6 +223,7 @@ def main() -> int:
         json.loads(OWNER_DECISIONS.read_text(encoding="utf-8"))["decisions"]
         if OWNER_DECISIONS.exists()
         else None,
+        d053,
     )
     new_rows = [
         ["", "", q["source_document_id"], q["pdf_page_indexes"], "new", q["reason"], q["item"]]
@@ -195,6 +236,12 @@ def main() -> int:
     summary = {
         **result["summary"],
         "baseline": {"path": BASELINE.relative_to(PROJECT_ROOT).as_posix(), "sha256": digest},
+        "d053_page_review": {
+            "status": d053["status"],
+            "problems": d053["problems"],
+            "pages_in_scope": len(d053["pages"]),
+            "attestation_sha256": d053.get("attestation_sha256"),
+        },
         "owner_decisions_sha256": hashlib.sha256(OWNER_DECISIONS.read_bytes()).hexdigest()
         if OWNER_DECISIONS.exists()
         else None,

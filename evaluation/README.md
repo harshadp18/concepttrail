@@ -1,12 +1,19 @@
 # `evaluation/` — educational quality benchmarks
 
-This directory contains benchmark cases and reports, not application runtime logic.
+This directory contains evaluation tooling, benchmark cases and reports, not application runtime logic.
+
+**Current state:** see `benchmarks/README.md` (architecture, data specification, metric catalogue). The
+per-case JSONL files named below (`retrieval_cases.jsonl`, `answer_cases.jsonl`, `policy_cases.jsonl`)
+do not exist yet: they need human-labelled data. What exists: `benchmarks/v1/` (sealed constructed
+cases), `run.py` (report), `review.py` (blind review packets), `bkt_calibration.py`,
+`adaptive_policy_sim.py` (synthetic), `embedding_model_eval.py` (AI-derived relevance; a proxy).
 
 ## Files
 
 - `retrieval_cases.jsonl`: question/context metadata and the expected relevant source/chunk IDs for Recall@k and ranking evaluation.
 - `answer_cases.jsonl`: reviewed question, permitted evidence references, rubric/reference answer and slice metadata for educator evaluation.
 - `policy_cases.jsonl`: expected deterministic policy outcome for ambiguity, unsupported topics, insufficient evidence, coverage gates, hint policies and permissions.
+- `provider_smoke_cases.json`: synthetic, design-only smoke-test cases for the Ollama (Qwen) primary and the manual-only Groq candidate (D-055). No textbook content, no personal data, not run.
 - `reports/`: timestamped, versioned results and regressions.
 
 ## Minimum metadata per case
@@ -18,7 +25,7 @@ This directory contains benchmark cases and reports, not application runtime log
 - Retrieval: Recall@k, MRR@k, nDCG@k if relevance grades exist, source citation resolvability, filter leakage.
 - Answers: expert-rated correctness, curriculum alignment, grounding, age suitability, citation validity, unsupported-claim rate, appropriate abstention.
 - Policy: expected decision accuracy on deterministic cases and correct abstention/teacher escalation.
-- Provider comparison: paired Gemini/Groq/DeepSeek candidate tests on identical prompts and retrieval context; report latency, token use/cost under the provider's current pricing, parse failure, quality slices.
+- Provider comparison: paired candidate tests (current: Qwen 3.5 9B via Ollama and GPT-OSS 120B via Groq per D-055; Gemini/DeepSeek are historical and not selected) on identical prompts and retrieval context; report latency, token use/cost under the provider's current pricing, parse failure, quality slices.
 - BKT: held-out likelihood, calibration, stability and per-skill slices where data support.
 
 A model response being syntactically valid or having a low training loss does not establish educational correctness.

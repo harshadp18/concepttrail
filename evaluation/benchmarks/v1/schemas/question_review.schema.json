@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Question review record (one reviewer, one item)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "item_id",
+    "reviewer_id",
+    "blind_answer",
+    "ambiguous",
+    "decision"
+  ],
+  "properties": {
+    "item_id": {
+      "type": "string"
+    },
+    "reviewer_id": {
+      "type": "string"
+    },
+    "blind_answer": {
+      "type": "string",
+      "description": "reviewer's own answer BEFORE seeing the stored key: option key(s) joined by ';', True/False, or a number"
+    },
+    "ambiguous": {
+      "enum": [
+        "yes",
+        "no"
+      ]
+    },
+    "kc_alignment": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "age_language_fit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "distractor_quality": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "explanation_correct": {
+      "enum": [
+        "yes",
+        "no",
+        "na"
+      ]
+    },
+    "passage_dependent": {
+      "enum": [
+        "yes",
+        "no"
+      ]
+    },
+    "decision": {
+      "enum": [
+        "accept",
+        "revise",
+        "reject"
+      ]
+    },
+    "comments": {
+      "type": "string"
+    }
+  }
+}

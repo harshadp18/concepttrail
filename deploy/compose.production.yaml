@@ -1,0 +1,90 @@
+# PRODUCTION-CANDIDATE stack: backend + shared rate-limit store. The database is an external,
+# managed PostgreSQL 18 + pgvector service (backed up per deploy/backup.sh), never a container
+# volume on the application host. Nothing has a default secret: every `:?` variable must be set
+# in the deployment environment or the stack refuses to start, and the application's own
+# settings validation refuses demo content, a per-process limiter, wildcard CORS, missing trusted
+# hosts and public API docs when APP_ENV=production.
+#
+#   docker compose -f deploy/compose.production.yaml --env-file /secure/path/production.env up -d
+#
+# Put a TLS-terminating reverse proxy in front of the backend and set FORWARDED_ALLOW_IPS to its
+# address so client IPs used for login throttling are the real ones.
+services:
+  redis:
+    image: redis:7.4.2-alpine
+    restart: unless-stopped
+    command:
+      - sh
+      - -c
+      - exec redis-server --requirepass "$$REDIS_PASSWORD" --save "" --appendonly no
+        --maxmemory 128mb --maxmemory-policy volatile-ttl
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    read_only: true
+    tmpfs: [/data]
+    security_opt: [no-new-privileges:true]
+    deploy:
+      resources:
+        limits: {cpus: "0.50", memory: 192M}
+    networks: [internal]
+
+  backend:
+    image: ${BACKEND_IMAGE:?Set BACKEND_IMAGE to a built, tagged image}
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      CONTENT_RELEASE_MODE: production
+      DEBUG: "false"
+      LOG_LEVEL: INFO
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL (postgresql+psycopg://... with sslmode=require)}
+      DB_SCHEMA: concepttrail
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Set JWT_SECRET_KEY}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      RATE_LIMIT_BACKEND: redis
+      # Private network only; use rediss:// if the store is reached over any other network.
+      REDIS_URL: redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD}@redis:6379/0
+      TRUSTED_HOSTS: ${TRUSTED_HOSTS:?Set TRUSTED_HOSTS to the served host names}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?Set CORS_ALLOWED_ORIGINS to the https frontend origin(s)}
+      API_DOCS_ENABLED: "false"
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:?Set FORWARDED_ALLOW_IPS to the reverse proxy address}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:?Set OLLAMA_BASE_URL to a private-network or https inference host}
+      LLM_FALLBACK_ENABLED: "false"
+      RAG_EMBEDDING_MODEL: ${RAG_EMBEDDING_MODEL:-bge-m3}
+      RAG_INDEX_GENERATION: ${RAG_INDEX_GENERATION:-}
+    volumes:
+      - ${AUTHORIZATION_RECORDS_DIR:?Set AUTHORIZATION_RECORDS_DIR}:/run/concepttrail/authorizations:ro
+    ports:
+      - "127.0.0.1:${BACKEND_HOST_PORT:-8000}:8000"  # reached only through the local reverse proxy
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    deploy:
+      resources:
+        limits: {cpus: "2.0", memory: 1G}
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=5).status == 200 else 1)"
+      interval: 15s
+      timeout: 8s
+      retries: 4
+      start_period: 20s
+    logging:
+      driver: json-file
+      options: {max-size: "20m", max-file: "5"}
+    networks: [internal, default]
+
+networks:
+  internal:
+    internal: true

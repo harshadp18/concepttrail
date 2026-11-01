@@ -39,7 +39,7 @@ flowchart TB
 | `app/services/prerequisite_graph` | edge direction, DAG validation and root-gap candidates | chapter extraction |
 | `app/services/policy_engine` | versioned deterministic actions and reason codes | model-generated decisions |
 | `app/services/retrieval_service` | rights/status/class/subject/version/language-filtered search and source refs | final prose or invented citations |
-| `app/services/llm_provider` | provider adapter, timeouts and tested transient fallback | authorization, grading or DB writes |
+| `app/services/llm_provider` | provider adapter, timeouts and tested transient fallback | authorization, grading or DB writes **[Not yet implemented. Planned adapters: Ollama (primary) and Groq (disabled fallback), D-055; see `docs/PROVIDER_READINESS.md`.]** |
 | `app/services/answer_verifier` | schema, citation and subject-specific checks | unbounded interpretation of arbitrary generated code |
 | `app/services/bell_ringer_service` | evidence aggregation and draft recipe | publishing without teacher review |
 | `data_pipeline` | offline source intake, extraction, cleaning, structuring, QC, derived CSVs and publish | synchronous API serving |

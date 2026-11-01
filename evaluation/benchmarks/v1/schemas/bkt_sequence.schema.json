@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Learner response sequence for BKT evaluation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "learner_pseudonym",
+    "kc_id",
+    "outcomes",
+    "source",
+    "consent_reference"
+  ],
+  "properties": {
+    "learner_pseudonym": {
+      "type": "string"
+    },
+    "kc_id": {
+      "type": "string"
+    },
+    "outcomes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "t",
+          "correct"
+        ],
+        "properties": {
+          "t": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "correct": {
+            "type": "boolean"
+          },
+          "hint_tier": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          }
+        }
+      }
+    },
+    "source": {
+      "enum": [
+        "real",
+        "synthetic"
+      ],
+      "description": "synthetic is for pipeline tests only and is never evidence for a parameter set"
+    },
+    "consent_reference": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "required when source is real"
+    }
+  }
+}

@@ -2,12 +2,17 @@
 
 Read the relevant document before changing its subsystem. Update source traceability and decisions with every cross-layer change.
 
-- `SOURCE_AUDIT.md`: attached README source basis, what was not provided, and implementation evidence boundary. The selection PPT/deck is intentionally excluded from this revision.
-- `DECISIONS.md`: confirmed architecture choices, preserved database contract and owner approvals required for changes.
+- `PUBLIC_DECISIONS.md`: the public decision register: preserved database contract, authentication model, provider selection, deterministic-versus-AI boundary, rights rule and migration approval.
 - `ARCHITECTURE.md`: runtime, ingestion, retrieval, BKT and module boundaries.
 - `DATABASE_SCHEMA.md`: 26-table ERD contract, relationships, constraints and migration rules.
 - `DATA_PIPELINE.md`: one master CSV, rights, PDFs, page-aware JSON, derived CSVs, QC and publishing.
-- `AI_AND_PROVIDER_STRATEGY.md`: BKT, deterministic policy, RAG, one-primary-provider posture, fallback gate and embedding selection.
+- `AI_AND_PROVIDER_STRATEGY.md`: BKT, deterministic policy, RAG, provider posture (Ollama/Qwen primary, disabled Groq fallback), fallback gate and embedding selection.
+- `PUBLICATION_AND_REPRODUCIBILITY.md`: what a public checkout contains, which files stay private, fresh-clone runtime dependencies on private records, and how the private owner attestation is supplied and verified.
+- `PHASE_5_CSV_CONTRACT.md` and `PHASE_5_REVIEW_GUIDELINES.md`: proposed KC and prerequisite CSV contracts, validation rules, database mapping and the human review procedure (awaiting owner approval).
+- `PHASE_5_IMPLEMENTATION_HANDOFF.md`: the exact build order for the KC and prerequisite CSV loader (milestones M1–M6), dry-run behaviour, the import-ready plan and what is ready, blocked or needs separate approval.
+- `PHASE_5_OWNER_DECISION_CHECKLIST.md`: every outstanding Phase 5 owner decision (D1–D18, R1–R7) in one sheet: proposal, recommendation, what it blocks and the exact owner action.
+- `PHASE_5_PROGRESS.md`: authoritative Phase 5 scope (KCs and the prerequisite graph), what is built, what is blocked and the owner decisions needed.
+- `PROVIDER_READINESS.md`: what exists for the LLM providers (no adapter yet), environment variables, error handling, telemetry, local-versus-remote deployment and the synthetic smoke-test plan (D-055).
 - `API_CONTRACTS.md`: proposed `/api/v1` API paths, request/response/security contracts and schema caveats.
 - `IMPLEMENTATION_ROADMAP.md`: ordered phases, exact exit gates and recovery rules.
 - `REQUIREMENTS_TRACEABILITY.md`: evidence-bound requirements and acceptance criteria.

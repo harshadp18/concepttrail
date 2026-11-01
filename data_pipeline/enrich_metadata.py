@@ -29,7 +29,9 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-ENRICHMENT_VERSION = "metadata-enrichment/1.7.0"
+from data_pipeline import teacher_validation as tv
+
+ENRICHMENT_VERSION = "metadata-enrichment/1.8.0"
 VALUE_STATUSES = (
     "verified",
     "source_explicit",
@@ -116,6 +118,10 @@ def topic_records(
             if e["kind"] == "heading_candidate"
             else "source_explicit",
             "review_status": "requires_human_review",
+            # Filled by apply_topic_validation only for covered topic/subtopic rows.
+            "review_completion": None,
+            "approval_outcome": None,
+            "validation_record": None,
             "evidence_reference": artifact,
         }
         for e in hierarchy
@@ -123,7 +129,49 @@ def topic_records(
     ]
 
 
+def apply_topic_validation(
+    topics: list[dict[str, Any]], attestation: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Record the owner-attested teacher review on a chapter's numbered topic/subtopic rows.
+
+    Only rows covered by the attestation's topic-list digest change; chapter rows and
+    `heading_candidate` rows (not topics) keep `requires_human_review`. No row is approved.
+    """
+    if not topics:
+        return topics
+    state = tv.topic_validation(attestation, topics[0]["source_document_id"], topics)
+    if state is None:
+        return topics
+    for t in topics:
+        if t["kind"] in tv.TOPIC_KINDS:
+            t.update(state)
+    return topics
+
+
 def propose_topic_title(
+    topics: list[dict[str, Any]], text_unusable: bool, artifact: str, ocr_available: bool = False
+) -> dict[str, Any]:
+    proposal = _propose_topic_title(topics, text_unusable, artifact, ocr_available)
+    covered = [t for t in topics if t["kind"] in tv.TOPIC_KINDS and t.get("review_completion")]
+    if covered and proposal["value_status"] == "requires_human_review" and proposal["topic_count"]:
+        state = tv.aggregate(covered)
+        proposal.update(
+            review_status=state["review_status"],
+            review_completion=state["review_completion"],
+            approval_outcome=state["approval_outcome"],
+        )
+        if proposal["review_status"] != tv.PENDING_STATUS:
+            proposal["reason"] = (
+                f"chapter-level inventory row covers {proposal['topic_count']} topics; owner"
+                " rule: one canonical row per PDF, so topics stay in topic_mapping.csv (not"
+                " joined). The topic list was teacher-reviewed per the owner attestation"
+                f" ({state['validation_record']}); the outcome is not individually recorded,"
+                " so no approval is claimed"
+            )
+    return proposal
+
+
+def _propose_topic_title(
     topics: list[dict[str, Any]], text_unusable: bool, artifact: str, ocr_available: bool = False
 ) -> dict[str, Any]:
     level_one = [t for t in topics if t["kind"] == "topic"]
@@ -328,7 +376,11 @@ def _squash(text: str) -> str:
 
 
 def ai_generated_objectives(
-    doc: dict[str, Any], normalized: dict[str, Any], generated: dict[str, Any], artifact: str
+    doc: dict[str, Any],
+    normalized: dict[str, Any],
+    generated: dict[str, Any],
+    artifact: str,
+    attestation: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Generated objectives for this chapter, each grounded in the chapter's own text.
 
@@ -360,9 +412,20 @@ def ai_generated_objectives(
         }
         grounded = bool(term_pages) and all(term_pages.values())
         evidence_pages = sorted({i for found in term_pages.values() for i in found})
+        oid = tv.objective_id(doc["inventory_id"], number)
+        validation = (
+            tv.objective_validation(attestation or {}, chapter, oid)
+            if grounded
+            else {
+                "review_completion": "not_applicable",
+                "approval_outcome": None,
+                "review_status": "rejected_ungrounded",
+                "validation_record": None,
+            }
+        )
         out.append(
             {
-                "objective_id": f"{doc['inventory_id']}-AI-LO{number:02d}",
+                "objective_id": oid,
                 "objective": objective["text"],
                 "value_origin": "ai_generated",
                 "source_document_id": doc["source_id"],
@@ -377,7 +440,13 @@ def ai_generated_objectives(
                 "grounding": "grounded" if grounded else "rejected_ungrounded",
                 "evidence_terms": term_pages,
                 "confidence": None,
-                "review_status": meta["review_status"] if grounded else "rejected_ungrounded",
+                # Current state comes from the owner attestation (if it still binds to this
+                # exact text); the status at generation is kept as history.
+                "review_status": validation["review_status"],
+                "review_completion": validation["review_completion"],
+                "approval_outcome": validation["approval_outcome"],
+                "validation_record": validation["validation_record"],
+                "review_status_at_generation": meta["review_status"],
                 "evidence_reference": artifact,
             }
         )
@@ -401,16 +470,31 @@ def propose_objective(
         for x in objectives
         if x["value_origin"] == "ai_generated" and x.get("grounding") == "grounded"
     ]
-    if generated and not explicit_ok:
+    # A teacher outcome of rejected or revision_required keeps an objective out of the value.
+    writable = [
+        x for x in generated if x.get("approval_outcome") not in ("rejected", "revision_required")
+    ]
+    if writable and not explicit_ok:
+        state = tv.aggregate(generated)
+        completed = state["review_completion"] == tv.REVIEW_COMPLETED
         return {
             **base,
-            "value": " | ".join(x["objective"] for x in generated),
+            "value": " | ".join(x["objective"] for x in writable),
             "value_status": "ai_generated",
             "value_origin": "ai_generated",
-            "review_status": "pending_teacher_review",
-            "reason": f"{len(generated)} AI-generated objective(s), owner-approved (D-049),"
-            " grounded in the chapter text; not textbook-stated or official; pending teacher"
-            " review",
+            "review_status": state["review_status"],
+            "review_completion": state["review_completion"],
+            "approval_outcome": state["approval_outcome"],
+            "reason": f"{len(writable)} of {len(generated)} AI-generated objective(s),"
+            " owner-approved (D-049), grounded in the chapter text; not textbook-stated or"
+            " official; "
+            + (
+                "teacher validation completed per owner attestation"
+                f" ({state['validation_record']}); approval outcome:"
+                f" {state['approval_outcome']}"
+                if completed
+                else "pending teacher review"
+            ),
         }
     if usable and not self_contained([x["objective"] for x in usable]):
         return {

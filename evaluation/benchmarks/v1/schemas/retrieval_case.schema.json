@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Retrieval case",
+  "description": "A learner-style query judged against the stored pages. answerable=false cases (relevant_pages empty) measure correct non-retrieval.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "case_id": {
+      "type": "string"
+    },
+    "dataset_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+(\\.[0-9]+)*$"
+    },
+    "class_level": {
+      "type": "integer",
+      "minimum": 6,
+      "maximum": 10
+    },
+    "subject_id": {
+      "enum": [
+        "english",
+        "hindi",
+        "mathematics",
+        "science",
+        "social_science"
+      ]
+    },
+    "language": {
+      "enum": [
+        "en",
+        "hi"
+      ]
+    },
+    "curriculum_item_id": {
+      "type": "string",
+      "description": "chapter"
+    },
+    "label_provenance": {
+      "type": "string",
+      "enum": [
+        "human_expert_verified",
+        "human_reviewed_single",
+        "engineer_constructed",
+        "ai_generated_unverified"
+      ],
+      "description": "Only the first two count as ground truth for any quality metric. ai_generated_unverified may be used to propose cases for review, never to score."
+    },
+    "reviewers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Pseudonymous reviewer IDs; never names. Reviewer must not be the author/generator of the content under test and must label before seeing any model output."
+    },
+    "split": {
+      "enum": [
+        "dev",
+        "locked_test"
+      ],
+      "description": "locked_test is read only by release evaluations, never used to tune prompts, thresholds or models."
+    },
+    "query": {
+      "type": "string"
+    },
+    "answerable": {
+      "type": "boolean"
+    },
+    "relevant_pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source_id",
+          "pdf_page_index",
+          "grade"
+        ],
+        "properties": {
+          "source_id": {
+            "type": "string"
+          },
+          "pdf_page_index": {
+            "type": "integer"
+          },
+          "grade": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3,
+            "description": "3 answers the query fully, 2 partly, 1 related"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "case_id",
+    "dataset_version",
+    "class_level",
+    "subject_id",
+    "language",
+    "label_provenance",
+    "reviewers",
+    "split",
+    "query",
+    "answerable",
+    "relevant_pages"
+  ]
+}

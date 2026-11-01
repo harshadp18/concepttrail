@@ -67,11 +67,26 @@ Evaluate Recall@k, MRR@k, filter correctness, citation resolvability, abstention
 
 ## 6. Provider posture
 
-Use one configured, approved provider for the initial path. Preserve a provider-neutral interface. Gemini Flash is the proposed primary adapter from current conversation decisions, but the exact model ID, account access, regional availability, request limits, pricing and data terms must be verified before use.
+**Current architecture (D-055, owner decision 2026-10-31):** `Qwen 3.5 9B (local Ollama) -> Groq GPT-OSS 120B (cloud fallback candidate)`. Technical detail, error handling, telemetry and the synthetic smoke-test plan are in [`PROVIDER_READINESS.md`](PROVIDER_READINESS.md).
 
-Groq-hosted GPT-OSS-120B is an optional fallback candidate and remains disabled until the owner/account and privacy review are complete and tests prove it follows the same schema, grounding and safety rules. DeepSeek is benchmark-only unless separately approved. Do not enable multi-provider failover simply because an adapter exists.
+| Role | Provider / model | Endpoint | Status |
+|---|---|---|---|
+| Primary | `ollama` / `qwen3.5:9b` | `http://localhost:11434` `/api/chat` | Selected for development. Local context 4096, thinking off, JSON Schema output. Preliminary single-run benchmarks only; Hindi quality needs refinement. |
+| Fallback | `groq` / `openai/gpt-oss-120b` | `https://api.groq.com/openai/v1` `/chat/completions` | Candidate. **Automatic fallback disabled** (`LLM_FALLBACK_ENABLED=false`). Synthetic connectivity verified once (owner-reported). |
 
-Fallback can occur only for transient timeouts, network errors, rate limits or temporary 5xx errors. Never fail over around permission denials, safety refusals, invalid inputs, insufficient evidence or verifier failures. Bound retries and total request time. Redact prompts/logs; do not send student names, phone numbers, roll numbers, credentials or unnecessary learner history.
+- **No adapter exists yet.** Environment placeholders and typed settings (`app/core/config.py`) are configuration only. The Ollama adapter (over `httpx`, already a core dependency) and the Groq adapter (SDK `groq`, optional `llm` extra) are future work.
+- **Groq external processing is not authorised.** Choosing a provider is not a rights decision. No textbook excerpt, PDF, page image, student data or student identifier may be sent to Groq until the owner approves the exact scope and the retention/rights conditions are recorded. Synthetic, non-personal technical tests are acceptable.
+- **Local versus remote.** `localhost` works only on the owner's machine. A remotely deployed API needs a dedicated Ollama inference host (or other approved infrastructure) reached over https or a private network. Never expose port 11434 publicly.
+- **Fallback rules (unchanged).** Fallback may occur only for transient timeouts, network errors, rate limits or temporary 5xx errors. Never fail over around permission denials, safety refusals, invalid inputs, validation failures, insufficient evidence or verifier failures. Bound retries and total request time. Keep the interface provider-neutral. LLMs never set scores, mastery, graph edges, roles, access rights or next-step decisions.
+- **Embeddings are separate and undecided.** Selecting a chat model does not select an embedding model (section 7).
+
+**Superseded (history, not current):** the earlier posture named Gemini Flash as the proposed primary and DeepSeek as a benchmark-only challenger. Neither is selected. No Gemini or DeepSeek integration, key or authorisation record exists. The original text is kept below for traceability.
+
+> Use one configured, approved provider for the initial path. Preserve a provider-neutral interface. Gemini Flash is the proposed primary adapter from current conversation decisions, but the exact model ID, account access, regional availability, request limits, pricing and data terms must be verified before use.
+>
+> Groq-hosted GPT-OSS-120B is an optional fallback candidate and remains disabled until the owner/account and privacy review are complete and tests prove it follows the same schema, grounding and safety rules. DeepSeek is benchmark-only unless separately approved. Do not enable multi-provider failover simply because an adapter exists.
+>
+> Fallback can occur only for transient timeouts, network errors, rate limits or temporary 5xx errors. Never fail over around permission denials, safety refusals, invalid inputs, insufficient evidence or verifier failures. Bound retries and total request time. Redact prompts/logs; do not send student names, phone numbers, roll numbers, credentials or unnecessary learner history.
 
 ## 7. Embedding model decision
 

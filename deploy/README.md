@@ -1,52 +1,92 @@
 # `deploy/` — local and hosted deployment
 
-## Current local setup
+## Files
 
-The owner reports using a Windows-installed PostgreSQL 18 server with pgvector 0.8.7 enabled through pgAdmin. The application may connect directly via `DATABASE_URL`; Docker is optional, not a prerequisite. Do not start a second PostgreSQL server/container if the local server is already the intended database.
+| File | Purpose |
+|---|---|
+| `Dockerfile` | Backend image: Python 3.12.16 base pinned by digest, dependencies installed from `requirements.lock` with `--require-hashes`, non-root user, no secrets or private records in the image. |
+| `requirements.lock` | Exact, hash-verified runtime dependency set (pip-compile, constrained to the versions the test suite ran on). |
+| `compose.yaml` | DEVELOPMENT stack: PostgreSQL 18 + pgvector (volume `concepttrail_pgdata`), Redis (rate-limit counters only), backend in demo mode. |
+| `compose.production.yaml` | PRODUCTION-CANDIDATE stack: backend + password-protected Redis; external managed PostgreSQL; every secret required; demo mode impossible. |
 
-## Docker
+## Environments
 
-`Dockerfile` and `compose.yaml` are optional templates for a reproducible local or hosted environment. Before using them, decide whether PostgreSQL is managed externally or run in Compose. Never run two competing development databases without documenting which is canonical.
+| | Development (`compose.yaml`) | Production (`compose.production.yaml`) |
+|---|---|---|
+| `APP_ENV` | `development` | `production` |
+| Content served | `demo` (AI-generated `demo_release`, labelled) | `production` (approved/published only) |
+| Rate limiter | Redis (memory allowed outside production) | Redis required; startup refuses otherwise |
+| CORS | local dev origins | explicit https origins (required) |
+| API docs | on | off (startup refuses `API_DOCS_ENABLED=true`) |
+| Trusted hosts | not enforced | required |
+| Database | `concepttrail-postgres` container, host port 5433 | external, TLS (`sslmode=require`), least-privilege user |
 
-## Production requirements
+Settings validation (`app/core/config.py`) rejects placeholder or short secrets, equal secrets,
+debug, demo content, a per-process limiter, wildcard or plain-http CORS, missing trusted hosts and
+public API docs when `APP_ENV=production`.
 
-- Separate production DB and secrets from developer laptop credentials.
-- TLS connections, least-privilege DB users, network restrictions, rate limiting and provider spend limits.
-- Managed object storage or private file store for source/processed artifacts.
-- Durable background job execution for ingestion and scheduled Bell-Ringers.
-- Automated DB backups and tested restore procedure.
-- Versioned content/index releases and rollback to last known good index.
-- Health/readiness checks for API, DB and worker; alerts for failures/quotas/latency.
-- No real student pilot until privacy/legal/school review is complete.
+## Development commands
 
-Deployment provider and cost are not selected in this pack. Measure load and review current pricing/data terms rather than assuming a free tier is permanent.
+Run from the repository root with the local `.env` (never committed):
 
-## Standard implementation specification
+```sh
+docker compose --env-file .env -f deploy/compose.yaml build backend
+docker compose --env-file .env -f deploy/compose.yaml up -d --no-deps redis backend
+curl -s http://127.0.0.1:8010/ready
+```
 
-### 1. Module Purpose & Architectural Role
+`--no-deps` leaves the database container untouched. Never run `docker compose down -v`: it
+deletes the `concepttrail_pgdata` volume. The private authorization records are mounted read-only
+into the backend at `/run/concepttrail/authorizations`; without them every rights check refuses.
 
-Optional container/deployment assets after local application and tests work.
+## Health
 
-### 2. Recent Updates Incorporated in This Module
+- `GET /health` — liveness (process answers). Restart the container if it fails.
+- `GET /ready` — readiness: database query and rate limiter (`503` if either fails). The local
+  model and retrieval index are reported as optional; learning features return controlled
+  `model_unavailable`/`model_timeout` outcomes without them. The container healthcheck uses `/ready`.
 
-Do not force Docker for local PostgreSQL development; deployment is blocked on privacy, source rights, provider terms and restore/rollback tests.
+## Backup and restore
 
-### 3. File Manifest
+```sh
+python -m scripts.db_backup backup     # pg_dump -Fc + manifest (row counts, constraints, sha256)
+python -m scripts.db_backup verify     # restore into a throwaway container and compare
+```
 
-`Dockerfile`, `compose.yaml`; use only after validating build/start commands.
+Backups go to `.local/backups/` (git-ignored; copy them off the machine). `verify` starts a
+disposable `pgvector` container with no volume on `127.0.0.1:5434`, restores, checks every
+table's row count, the Alembic revision and the key/constraint count against the manifest, and
+removes the container. It never touches the live database.
 
-### 4. Data Structures, Types & Schemas
+Policy for production (owner to confirm with the hosting provider):
 
-Settings from environment/secrets; no keys in image or compose source; health/readiness separated from provider health.
+- Frequency: managed daily full backups plus continuous WAL archiving for point-in-time recovery
+  (target RPO 15 minutes); a logical `pg_dump` before every migration or content import.
+- Retention: 7 daily, 4 weekly, 12 monthly; encrypted at rest; stored in a different account or
+  region from the database.
+- Verification: an automated restore of the latest backup into a disposable instance at least
+  weekly using the same manifest comparison; a failed verification is an incident.
+- Restore: restore into a new instance, verify, then switch the application's `DATABASE_URL`;
+  never restore over the live database.
+- Ownership: the deployment owner (named in the private operations record) runs and signs off
+  restore drills.
 
-### 5. File-by-File Implementation Specification
+## Monitoring
 
-Run as non-root, use pinned dependencies, persist PostgreSQL/files safely, isolate ingestion worker, enforce TLS/rate limits at hosting layer.
+Logs are JSON lines on stdout: one `concepttrail.access` line per request (request ID, method,
+route template, status, duration; no bodies, query strings, tokens or identifiers), plus
+`concepttrail.app` / `concepttrail.llm` events. Alert on:
 
-### 6. Integration Points
+- API 5xx rate and p95 latency per route; `/ready` failures.
+- `429` on `/auth/login` (throttling spikes) and `503 login_protection_unavailable` (limiter down).
+- Database connection failures (`/ready` database failed).
+- `/doubts` outcomes: `model_timeout`, `model_unavailable`, `invalid_model_output`,
+  `insufficient_evidence` rates.
+- `unhandled_error` events (class name only) and `answer_verification_failed` on `/attempts`.
 
-Builds FastAPI application; deployment receives environment config and approved DB/index versions.
+## Production blockers outside this repository
 
-### 7. Module Verification Checklist
-
-Container build, health smoke test, backup/restore, rollback, secret scan and provider timeout test.
+A managed PostgreSQL with backups/PITR; a TLS reverse proxy; a private-network inference host for
+Ollama sized for the expected load; secret storage; human review and approval of content; real,
+consented learning data before BKT parameters can be calibrated; privacy/legal/school review
+before any real student pilot.

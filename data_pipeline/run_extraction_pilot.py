@@ -39,6 +39,8 @@ import pymupdf
 import yaml
 
 from data_pipeline import enrich_metadata as enrich
+from data_pipeline import owner_attestations as oa
+from data_pipeline import teacher_validation as tv
 from data_pipeline.authorization import LOCAL_USES, check_use, load_records
 from data_pipeline.stages import (
     classify_pages,
@@ -73,6 +75,9 @@ LOG_DIR = DATA / "logs/extraction_pilot"
 URL_EVIDENCE = ENRICH_DIR / "source_url_evidence.json"
 OFFICIAL_OUTCOMES = DATA / "overrides/metadata_enrichment/official_learning_outcomes.json"
 AI_OBJECTIVES = DATA / "overrides/metadata_enrichment/ai_generated_learning_objectives.json"
+TEACHER_VALIDATION = (
+    DATA / "overrides/metadata_enrichment" / ("teacher_validation_attestation_2026-10-31.json")
+)
 
 
 class PilotError(Exception):
@@ -389,11 +394,14 @@ def enrich_document(
     url_evidence: dict[str, Any] | None,
     catalogue: list[dict[str, Any]],
     generated: dict[str, Any] | None = None,
+    attestation: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     row, normalized = doc["row"], doc["normalized"]
     artifact = rel(doc["normalized_path"])
     unusable = normalized["text_unusable"]
-    topics = enrich.topic_records(row, normalized["hierarchy"], artifact)
+    topics = enrich.apply_topic_validation(
+        enrich.topic_records(row, normalized["hierarchy"], artifact), attestation or {}
+    )
     ocr_available = unusable and any(
         (p.get("ocr") or {}).get("status") in ("completed", "low_confidence")
         for p in normalized["pages"]
@@ -402,7 +410,7 @@ def enrich_document(
         enrich.official_objectives(row, catalogue)
         + enrich.explicit_objectives(row, normalized, artifact)
         + enrich.derived_objectives(row, topics, artifact)
-        + enrich.ai_generated_objectives(row, normalized, generated or {}, artifact)
+        + enrich.ai_generated_objectives(row, normalized, generated or {}, artifact, attestation)
     )
     return {
         "source_document_id": row["source_id"],
@@ -436,6 +444,42 @@ def stable_processed_at(inputs_digest: str) -> str:
     return now()
 
 
+def teacher_validation_summary(
+    records: list[dict[str, Any]], attestation_present: bool
+) -> dict[str, Any]:
+    """How much of the owner-attested review state reached the outputs (never assumed).
+
+    The attestation is a private file. When it is missing, or no longer binds to the current
+    objective or topic text, statuses stay pending and this summary says so.
+    """
+    objectives = [
+        o
+        for r in records
+        for o in r["objectives"]
+        if o["value_origin"] == "ai_generated" and o.get("grounding") == "grounded"
+    ]
+    topics = [t for r in records for t in r["topics"] if t["kind"] in tv.TOPIC_KINDS]
+    reconciled = sum(o.get("review_completion") == tv.REVIEW_COMPLETED for o in objectives)
+    if not objectives:
+        status = "not_applicable"
+    elif reconciled == len(objectives):
+        status = "applied"
+    elif not attestation_present:
+        status = "attestation_absent"
+    else:
+        status = "attestation_does_not_bind"
+    return {
+        "status": status,
+        "attestation_present": attestation_present,
+        "ai_generated_objectives": len(objectives),
+        "objectives_reconciled": reconciled,
+        "topic_rows": len(topics),
+        "topic_rows_reconciled": sum(
+            t.get("review_completion") == tv.REVIEW_COMPLETED for t in topics
+        ),
+    }
+
+
 def write_enrichment(
     records: list[dict[str, Any]],
     docs: list[dict[str, Any]],
@@ -450,6 +494,9 @@ def write_enrichment(
             if OFFICIAL_OUTCOMES.exists()
             else None,
             "ai_objectives_sha256": sha256_file(AI_OBJECTIVES) if AI_OBJECTIVES.exists() else None,
+            "teacher_validation_sha256": sha256_file(TEACHER_VALIDATION)
+            if TEACHER_VALIDATION.exists()
+            else None,
             "version": enrich.ENRICHMENT_VERSION,
         }
     )
@@ -472,6 +519,9 @@ def write_enrichment(
             "confidence",
             "value_status",
             "review_status",
+            "review_completion",
+            "approval_outcome",
+            "validation_record",
             "evidence_reference",
         ],
         [
@@ -491,6 +541,9 @@ def write_enrichment(
                     "confidence",
                     "value_status",
                     "review_status",
+                    "review_completion",
+                    "approval_outcome",
+                    "validation_record",
                     "evidence_reference",
                 )
             ]
@@ -510,6 +563,10 @@ def write_enrichment(
             "confidence",
             "review_status",
             "evidence_reference",
+            "review_completion",
+            "approval_outcome",
+            "validation_record",
+            "review_status_at_generation",
             "objective_id",
             "language",
             "generation_method",
@@ -534,6 +591,10 @@ def write_enrichment(
                     "confidence",
                     "review_status",
                     "evidence_reference",
+                    "review_completion",
+                    "approval_outcome",
+                    "validation_record",
+                    "review_status_at_generation",
                     "objective_id",
                     "language",
                     "generation_method",
@@ -630,6 +691,14 @@ def write_enrichment(
                     "learning_objective": o.get("reason"),
                     "source_url": u.get("reason"),
                     "acquired_at": a.get("reason"),
+                },
+                "review_completion": {
+                    "topic_title": t.get("review_completion"),
+                    "learning_objective": o.get("review_completion"),
+                },
+                "approval_outcome": {
+                    "topic_title": t.get("approval_outcome"),
+                    "learning_objective": o.get("approval_outcome"),
                 },
                 "objective_counts_by_origin": o["counts_by_origin"],
                 "topic_count": t["topic_count"],
@@ -831,6 +900,24 @@ def write_enrichment(
     for name, data in out.items():
         write_bytes(ENRICH_DIR / name, data)
         hashes[name] = hashlib.sha256(data).hexdigest()
+    teacher_summary = teacher_validation_summary(records, TEACHER_VALIDATION.exists())
+    if teacher_summary["status"] not in ("applied", "not_applicable"):
+        print(
+            f"warning: teacher validation not applied ({teacher_summary['status']}): "
+            f"{teacher_summary['objectives_reconciled']} of "
+            f"{teacher_summary['ai_generated_objectives']} AI objectives reconciled; "
+            "review statuses remain pending. The owner attestation is a private file "
+            "(see docs/PUBLICATION_AND_REPRODUCIBILITY.md).",
+            file=sys.stderr,
+        )
+    d053 = oa.verify_d053()
+    if d053["status"] in (oa.STALE, oa.INVALID):
+        print(
+            f"warning: D-053 page-review attestation is {d053['status']}: "
+            + "; ".join(d053["problems"])
+            + ". Page review is treated as not completed.",
+            file=sys.stderr,
+        )
     manifest = {
         **common,
         "inputs_digest": inputs_digest,
@@ -854,6 +941,20 @@ def write_enrichment(
         }
         if AI_OBJECTIVES.exists()
         else None,
+        "teacher_validation_attestation": {
+            "path": rel(TEACHER_VALIDATION),
+            "sha256": sha256_file(TEACHER_VALIDATION),
+            "decision": tv.DECISION_REFERENCE,
+        }
+        if TEACHER_VALIDATION.exists()
+        else None,
+        "teacher_validation": teacher_summary,
+        "d053_page_review": {
+            "status": d053["status"],
+            "attestation_sha256": d053.get("attestation_sha256"),
+            "pages_in_scope": len(d053["pages"]),
+            "problems": d053["problems"] if d053["status"] != oa.ABSENT else [],
+        },
         "outputs": hashes,
         "master_inventory_written": False,
         "database_writes": "none",
@@ -884,7 +985,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     catalogue = enrich.load_official_catalogue(OFFICIAL_OUTCOMES)
     generated = enrich.load_generated_objectives(AI_OBJECTIVES)
-    records = [enrich_document(d, url_evidence, catalogue, generated) for d in docs]
+    attestation = tv.load_attestation(TEACHER_VALIDATION)
+    records = [enrich_document(d, url_evidence, catalogue, generated, attestation) for d in docs]
     enrichment_hashes = write_enrichment(records, docs, inputs, url_evidence)
 
     quality = {d["source_id"]: {"slot": d["slot"], **d["quality"]} for d in docs}

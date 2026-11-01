@@ -1,0 +1,65 @@
+{
+  "dataset_version": "v1",
+  "description": "Versioned evaluation benchmark data. Kept separate from the generated content it evaluates: nothing here is produced from the question bank, the index or any model output.",
+  "ground_truth_rule": "Only label_provenance human_expert_verified or human_reviewed_single count as ground truth for a quality metric. engineer_constructed cases are specification checks. ai_generated_unverified items may propose cases for review and never score anything.",
+  "suites": {
+    "scoring": {
+      "file": "scoring_cases.jsonl",
+      "measures": "software_correctness",
+      "label_provenance": "engineer_constructed",
+      "status": "populated"
+    },
+    "adaptive": {
+      "file": "adaptive_cases.jsonl",
+      "measures": "software_correctness",
+      "label_provenance": "engineer_constructed",
+      "status": "populated"
+    },
+    "bkt_known_answers": {
+      "file": "bkt_known_answers.jsonl",
+      "measures": "software_correctness",
+      "label_provenance": "exact_arithmetic",
+      "status": "populated"
+    },
+    "retrieval": {
+      "schema": "schemas/retrieval_case.schema.json",
+      "measures": "human_quality",
+      "status": "no_cases",
+      "needs": "human-labelled query to page relevance, including unanswerable queries, English and Hindi"
+    },
+    "explanation": {
+      "schema": "schemas/explanation_case.schema.json",
+      "measures": "human_quality",
+      "status": "no_cases",
+      "needs": "human-authored prompts with reference points and supporting pages"
+    },
+    "question_review": {
+      "schema": "schemas/question_review.schema.json",
+      "measures": "human_quality",
+      "status": "no_reviews",
+      "needs": "independent blind reviews (python -m evaluation.review make)"
+    },
+    "bkt_sequences": {
+      "schema": "schemas/bkt_sequence.schema.json",
+      "measures": "outcome",
+      "status": "no_real_data",
+      "needs": "consented longitudinal responses"
+    },
+    "learning_outcome": {
+      "schema": "schemas/learning_outcome.schema.json",
+      "measures": "outcome",
+      "status": "no_real_data",
+      "needs": "controlled study with disjoint post-tests"
+    }
+  },
+  "files": {
+    "adaptive_cases.jsonl": "99d4039223289af49b1eaa777a0a7df60d472839207271926c8e6c4b202f7de2",
+    "bkt_known_answers.jsonl": "6c1407188010a82f971f71c32e9498ad8d9b28d224cb8cbd061436a0b78f58eb",
+    "schemas/bkt_sequence.schema.json": "53fd7820c4cf82480e9725c7d95ca3263ba85605cf6c5b1ebb4b75b9c00fa940",
+    "schemas/explanation_case.schema.json": "a26e397854b19e6f5080bc42989de347668f0144754a1c20533ebaf0984d4520",
+    "schemas/learning_outcome.schema.json": "081ff6f56a1cf338b5d7f8373c448e8232781ebc5d208daa90d5fd4992e9b3e2",
+    "schemas/question_review.schema.json": "8329ec4ad9947d6b90288f0d6c72b95920a06206352b785be8343c6b5beaa8ba",
+    "schemas/retrieval_case.schema.json": "3cfdf393c6cdf6e0e80fd073d238cc4502b3fc1f3efcae3d02f23641a9fd80a2",
+    "scoring_cases.jsonl": "ef0c9882a952fe50b4714fa2ce78a6e4e81bf4a0ff6bb63aa152b450c086d291"
+  }
+}

@@ -50,7 +50,7 @@ from data_pipeline.clean_teammate_csv import atomic_write_bytes, csv_bytes, json
 from data_pipeline.inventory_schema import CANONICAL_HEADER
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-BUILDER_VERSION = "pilot-enriched-csv/2.0.0"
+BUILDER_VERSION = "pilot-enriched-csv/2.1.0"
 OUTPUT_STEM = "curriculum_inventory.pilot_enriched"
 
 ENRICHED_FIELDS: dict[str, str] = {
@@ -88,6 +88,8 @@ STATUS_HEADER = (
     "value_status",
     "value_origin",
     "review_status",
+    "review_completion",
+    "approval_outcome",
     "confidence",
     "original_value",
     "written_value",
@@ -118,6 +120,7 @@ class Paths:
     authorization_dir: Path
     output_dir: Path
     owner_decisions: Path | None = None
+    teacher_validation: Path | None = None
     artifact_root: Path = PROJECT_ROOT
 
     @classmethod
@@ -135,6 +138,9 @@ class Paths:
             output_dir=enrichment,
             owner_decisions=PROJECT_ROOT
             / "data_pipeline/data/overrides/metadata_enrichment/owner_decisions_2026-10-31.json",
+            teacher_validation=PROJECT_ROOT
+            / "data_pipeline/data/overrides/metadata_enrichment"
+            / "teacher_validation_attestation_2026-10-31.json",
         )
 
 
@@ -393,6 +399,8 @@ def build(paths: Paths, now: datetime | None = None) -> dict[str, Any]:
                     status or "",
                     origin or "",
                     review,
+                    (record.get("review_completion") or {}).get(field) or "",
+                    (record.get("approval_outcome") or {}).get(field) or "",
                     (record.get("confidence") or {}).get(field) or "",
                     row[field],
                     new[field] if written else "",
@@ -440,6 +448,8 @@ def build(paths: Paths, now: datetime | None = None) -> dict[str, Any]:
                     ";".join(g["basis"] for g in granting),
                     ";".join(g["review_status"] for g in granting),
                     "",
+                    "",
+                    "",
                     row[field],
                     new[field],
                     "0",
@@ -481,6 +491,8 @@ def build(paths: Paths, now: datetime | None = None) -> dict[str, Any]:
                 EXTRACTION_RULE,
                 row["review_status"],
                 "",
+                "",
+                "",
                 row["extraction_status"],
                 new["extraction_status"] if eligible else "",
                 "0",
@@ -513,6 +525,11 @@ def build(paths: Paths, now: datetime | None = None) -> dict[str, Any]:
             **(
                 {rel(paths.owner_decisions): sha256(paths.owner_decisions)}
                 if paths.owner_decisions is not None and paths.owner_decisions.exists()
+                else {}
+            ),
+            **(
+                {rel(paths.teacher_validation): sha256(paths.teacher_validation)}
+                if paths.teacher_validation is not None and paths.teacher_validation.exists()
                 else {}
             ),
         },

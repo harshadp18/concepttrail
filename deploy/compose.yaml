@@ -19,6 +19,77 @@ services:
       timeout: 5s
       retries: 20
 
+  # Shared rate-limit store for the development stack (ephemeral: counters only, no data).
+  redis:
+    image: redis:7.4.2-alpine
+    container_name: concepttrail-redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "64mb",
+              "--maxmemory-policy", "volatile-ttl"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    security_opt:
+      - no-new-privileges:true
+
+  # FastAPI backend (DEVELOPMENT stack). Run from the repository root with the local .env:
+  #   docker compose --env-file .env -f deploy/compose.yaml up -d --build --no-deps redis backend
+  # The image contains no secrets and no private records: configuration is injected at run time
+  # and the authorization records are mounted read-only. Inside the network the database is
+  # `db:5432` (never localhost:5433). Ollama runs on the host (host.docker.internal); the API
+  # starts without it and learning features report `model_unavailable`.
+  # Production uses deploy/compose.production.yaml instead (no demo content, required secrets).
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: concepttrail-backend:dev
+    container_name: concepttrail-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - path: ../.env
+        required: true
+    environment:
+      APP_ENV: development
+      # Development only: also serve AI-generated demo content (refused when APP_ENV=production).
+      CONTENT_RELEASE_MODE: ${CONTENT_RELEASE_MODE:-demo}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-concepttrail_user}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in local .env}@db:5432/${POSTGRES_DB:-concepttrail_db}
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      RATE_LIMIT_BACKEND: redis
+      REDIS_URL: redis://redis:6379/0
+      RAG_EMBEDDING_MODEL: bge-m3
+      RAG_INDEX_GENERATION: ${RAG_INDEX_GENERATION:-ig-dev-1-bge-m3}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000}
+    volumes:
+      - ../data_pipeline/data/overrides/authorizations:/run/concepttrail/authorizations:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:${BACKEND_HOST_PORT:-8010}:8000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      # Readiness: the process answers, the database accepts a query, the limiter is reachable.
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=5).status == 200 else 1)"
+      interval: 10s
+      timeout: 8s
+      retries: 6
+      start_period: 15s
+
 volumes:
   concepttrail_pgdata:
     name: concepttrail_pgdata

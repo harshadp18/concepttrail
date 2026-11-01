@@ -268,7 +268,7 @@ def test_unknown_acquisition_date_is_explicit(tmp_path: Path) -> None:
         pdf,
         [tmp_path],
         {"creation_date": "D:2025", "modification_date": ""},
-        run=fake_xattr("0087;6ae4ec90;WhatsApp;"),
+        run=fake_xattr("0087;6ae4ec90;ExampleChatApp;"),
     )
     assert result["value"] is None
     assert (result["acquisition_date_status"], result["reason"], result["review_status"]) == (
@@ -278,7 +278,7 @@ def test_unknown_acquisition_date_is_explicit(tmp_path: Path) -> None:
     )
     considered = {e["type"]: e for e in result["evidence_considered"]}
     transfer = considered["macos_quarantine_transfer"]
-    assert transfer["found"]["agent"] == "WhatsApp" and transfer["accepted"] is False
+    assert transfer["found"]["agent"] == "ExampleChatApp" and transfer["accepted"] is False
     assert considered["pdf_creation_or_modification_date"]["accepted"] is False
     assert considered["file_modification_time"]["accepted"] is False
 

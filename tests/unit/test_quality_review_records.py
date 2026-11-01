@@ -5,9 +5,15 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
+import pytest
+
 REVIEW = (
     Path(__file__).resolve().parents[2]
     / "data_pipeline/data/overrides/quality_review/ai_assisted_page_review_2026-10-31.csv"
+)
+pytestmark = pytest.mark.skipif(
+    not REVIEW.exists(),
+    reason="private AI-assisted review record (gitignored) is not present in this checkout",
 )
 OCR_PAGES = {
     "SRC-C09-MAT-IEMH1-04": {9, 21},

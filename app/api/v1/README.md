@@ -10,7 +10,7 @@ Version 1 route modules for agreed student, teacher and operator API.
 
 ### 2. Recent Updates Incorporated in This Module
 
-Use exact route list in `docs/API_CONTRACTS.md`; include `GET /me`, topics, student progress and a gated Bell-Ringer draft request. Bell-Ringer review persistence is blocked on schema approval.
+Use exact route list in `docs/API_CONTRACTS.md`; include `GET /me`, topics, student progress, the teacher heatmap and Bell-Ringer topic analysis (`bell_ringer.py`). Bell-Ringer cycle persistence answers 503 until proposed migration 0004 is approved.
 
 ### 3. File Manifest
 

@@ -22,3 +22,7 @@ Written by `python -m data_pipeline.run_extraction_pilot`, with source-URL evide
 **Value statuses:** `verified`, `source_explicit`, `source_derived_candidate`, `ai_generated`, `not_yet_extracted`, `not_found`, `unknown`, `not_applicable`, `requires_human_review`.
 
 Placeholder strings such as `N/A`, `0`, `Unknown` or `TBD` are never written into value fields. Missing values stay empty, with an explicit status and reason.
+
+## Review-state columns (D-054)
+
+`learning_objective_mapping.csv` and `topic_mapping.csv` carry `review_completion` (`completed_owner_attested`, `pending`, `not_applicable`, or empty when not covered), `approval_outcome` (`not_individually_recorded`, `approved`, `rejected`, `revision_required`, or empty) and `validation_record`. `review_status` holds the combined current state (for example `teacher_reviewed_outcome_not_recorded`). The objective mapping also keeps `review_status_at_generation` (the original `pending_teacher_review`). **Completion is never approval.** `unified_enrichment.json` has matching `review_completion` and `approval_outcome` objects, and `curriculum_inventory.pilot_enriched.status.csv` has the same two columns.

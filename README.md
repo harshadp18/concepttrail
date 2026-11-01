@@ -62,7 +62,7 @@ No application source repository, dependency lockfile, migration history, test s
 
 ### Source-document gap
 
-The user-designated attached `README.md` is the project-context source used for this package revision. The selection PPT/deck is intentionally not used as an input. No separate PRD, application source repository, frontend source, dependency lockfile, migration history, or deployed API was supplied for audit. The user will develop the frontend separately; Claude Code is backend/data/AI/pipeline-only. The context README is a product/engineering specification, not proof of implementation. See `docs/SOURCE_AUDIT.md` for the evidence boundary.
+The user-designated attached `README.md` is the project-context source used for this package revision. The selection PPT/deck is intentionally not used as an input. No separate PRD, application source repository, frontend source, dependency lockfile, migration history, or deployed API was supplied for audit. The user will develop the frontend separately; Claude Code is backend/data/AI/pipeline-only. The context README is a product/engineering specification, not proof of implementation. The documents in `docs/` mark which statements are design and which are implemented and tested; do not treat a design statement as implemented.
 
 ## 4. Target architecture
 
@@ -155,7 +155,7 @@ Use a scheduled/background job or explicit teacher action, not a normal dashboar
 | Data handling | Python stdlib + Pydantic; pandas only where useful | Avoid unnecessary dataframe dependency for every stage. |
 | Graph | NetworkX initially | Store edges relationally; no graph database in v1. |
 | Math verification | Deterministic Python checks; SymPy for constrained symbolic tasks | Never use unrestricted `eval` on model output. |
-| LLM provider layer | One approved provider behind a provider-neutral adapter; retain Gemini Flash as the proposed primary and Groq GPT-OSS-120B as a disabled fallback candidate pending account, privacy, quality and failure-path verification; DeepSeek is benchmark-only | Configure exact model IDs; do not enable fallback until it passes the acceptance gates. No free/unlimited guarantee. |
+| LLM provider layer | Provider-neutral adapter. Primary: Qwen 3.5 9B (`qwen3.5:9b`) through local Ollama. Fallback candidate: GPT-OSS 120B (`openai/gpt-oss-120b`) through Groq, **automatic fallback disabled**. Gemini and DeepSeek are not selected. The embedding model is undecided. (D-055) | Configure exact model IDs via environment variables; do not enable fallback until it passes the acceptance gates and the owner approves. No adapter is implemented yet. No free/unlimited guarantee. |
 | Embeddings | Not selected yet | Benchmark English/Hindi (and other explicitly approved languages) before choosing model and dimension. |
 | Vector storage | pgvector | Keep unbounded `VECTOR` schema from current ERD until dimension is approved; vector index later. |
 | Testing | pytest, pytest-asyncio, HTTPX test client | Unit, integration, E2E, data and retrieval tests. |
@@ -264,14 +264,15 @@ concepttrail/
 │   ├── CSV_CLEANING_SPEC.md
 │   ├── DATA_PIPELINE.md
 │   ├── DATABASE_SCHEMA.md
-│   ├── DECISIONS.md
 │   ├── FRONTEND_INTEGRATION.md
 │   ├── IMPLEMENTATION_ROADMAP.md
 │   ├── README.md
 │   ├── REQUIREMENTS_TRACEABILITY.md
+│   ├── PROVIDER_READINESS.md
+│   ├── PUBLIC_DECISIONS.md
+│   ├── PUBLICATION_AND_REPRODUCIBILITY.md
 │   ├── RISKS_AND_DECISIONS.md
 │   ├── SECURITY_PRIVACY.md
-│   ├── SOURCE_AUDIT.md
 │   └── TROUBLESHOOTING.md
 ├── evaluation/
 │   ├── reports/
@@ -412,11 +413,13 @@ Keep raw extracted output immutable. Cleaning and structuring create new version
 
 ### Provider router
 
-Provider posture for the initial implementation:
+> **Current architecture (D-055, 2026-10-31):** primary `ollama` / `qwen3.5:9b` (local); fallback candidate `groq` / `openai/gpt-oss-120b`, **disabled**; Gemini and DeepSeek are not selected; embedding model undecided; no adapter exists yet; Groq content processing is not authorised. See `docs/PROVIDER_READINESS.md`.
 
-- Keep the provider interface provider-neutral. Gemini Flash is the proposed primary adapter from the current conversation; its exact model ID must be checked against the user's account and current provider documentation.
-- Groq-hosted GPT-OSS-120B is a fallback candidate, not an automatically enabled second provider. Enable it only after privacy/terms review, live account availability checks, identical schema/verifier tests, and transient-failure tests pass.
-- DeepSeek remains a benchmark candidate only; do not make it a default production fallback.
+Provider posture:
+
+- Keep the provider interface provider-neutral. Qwen 3.5 9B through local Ollama is the primary; `localhost` is not reachable from a remote server, so production needs dedicated inference infrastructure.
+- Groq-hosted GPT-OSS-120B is a fallback candidate, not an automatically enabled second provider. Enable it only after privacy/terms review, rights and retention approval for the data involved, live account checks, identical schema/verifier tests, transient-failure tests and owner approval.
+- Gemini and DeepSeek are not selected (earlier proposals are recorded as historical in the decision register).
 
 The supplied README recommends starting with one approved hosted or local pretrained model and adding a second provider only after fallback and privacy tests. This rule takes precedence over convenience: leave fallback disabled until the acceptance gate is recorded. Never hardcode transient model versions. Read keys/model IDs from environment variables. Fallback only for retryable transient failures (timeout, network failure, rate limit or temporary 5xx). Do not switch providers to bypass a safety refusal, permission block, invalid request, inadequate source evidence or verifier failure. Validate all providers with the same Pydantic schemas and source checks. No provider is guaranteed to offer free or unlimited access.
 
@@ -585,7 +588,7 @@ The attached engineering README is the primary product-context reference for thi
 | Question bank and answer verification | Attached README | Typed item/scoring methods; deterministic math checks; human-reviewed rubrics for subjective items | `app/schemas/README.md`, `app/services/README.md` | No unverified item is published; unsafe expression payloads are rejected |
 | BKT mastery and adaptive policies | Attached README | Persist versioned BKT settings; do not conflate mastery probability and quiz percentage; idempotent attempt updates | `app/services/README.md`, `docs/AI_AND_PROVIDER_STRATEGY.md` | Hand-calculated BKT tests, policy boundary tests and duplicate-attempt tests pass |
 | RAG and citations | Attached README | Filter by class, subject, curriculum/course, language, permission, review and index generation; citations come from DB records | `app/services/README.md`, `docs/API_CONTRACTS.md` | 100% citation resolvability in test set and zero metadata-filter leakage |
-| LLM/provider use | Attached README + current conversation configuration | One approved primary first; Gemini proposed primary, Groq fallback disabled pending validation, DeepSeek benchmark-only | `docs/AI_AND_PROVIDER_STRATEGY.md`, `.env.example` | Model ID/terms verified; transient-only failover; same verifier for all adapters |
+| LLM/provider use | Owner decision 2026-10-31 (D-055) | Qwen 3.5 9B via local Ollama primary; Groq GPT-OSS 120B fallback candidate, disabled; Gemini and DeepSeek not selected; Groq content processing not authorised | `docs/AI_AND_PROVIDER_STRATEGY.md`, `docs/PROVIDER_READINESS.md`, `.env.example` | Model ID/terms verified; transient-only failover; same verifier for all adapters |
 | Teacher dashboard and Bell-Ringer | Attached README | Assignment-scoped analytics; configurable evidence gate; activity remains draft until teacher approval | `app/api/v1/README.md`, `app/services/README.md` | Unassigned teacher denied; low coverage blocks; approve/edit/reject actions audited |
 | 26-table database contract | User reports schema already run | Preserve `subject_id VARCHAR`, exact `embedding_chunk` columns and unbounded `VECTOR`; use introspection before Alembic | `db/README.md`, `docs/DATABASE_SCHEMA.md` | Read-only introspection matches approved baseline before migration |
 | Frontend implementation boundary | Owner will build frontend separately | Claude Code leaves UI code untouched and supplies stable API/OpenAPI integration contracts | `docs/API_CONTRACTS.md`, `docs/FRONTEND_INTEGRATION.md`, root `CLAUDE.md` | API contract tests and generated OpenAPI pass; no frontend files are created/modified |
@@ -593,6 +596,8 @@ The attached engineering README is the primary product-context reference for thi
 | Evaluation and claims | Attached README | Separate retrieval, answer quality, BKT calibration, teacher feedback and real outcomes; simulation is not evidence | `evaluation/README.md`, `tests/README.md` | Versioned benchmarks and slice metrics; no unsupported score-improvement claims |
 
 ### Eight grouped implementation phases
+
+**Status (2026-10-31):** the extraction pilot (10 documents, 222 pages) is completed and was approved by the project owner; the full corpus has not been extracted, no LLM provider adapter exists yet, and Phase 5 has not started. See the status table in `docs/IMPLEMENTATION_ROADMAP.md`.
 
 The detailed roadmap in `docs/IMPLEMENTATION_ROADMAP.md` is authoritative. Frontend implementation is explicitly excluded; CSV profiling and cleaning are included before inventory mapping. For the requested Phase 0–7 Claude Code workflow, group it as follows:
 

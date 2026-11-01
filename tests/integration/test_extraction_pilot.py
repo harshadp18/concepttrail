@@ -135,6 +135,7 @@ def env(tmp_path: Path, pdfs, inventory, monkeypatch: pytest.MonkeyPatch):
         "URL_EVIDENCE": data / "enrichment/source_url_evidence.json",
         "OFFICIAL_OUTCOMES": data / "official.json",
         "AI_OBJECTIVES": data / "ai_objectives.json",
+        "TEACHER_VALIDATION": data / "teacher_validation.json",
         "DATA": data,
     }.items():
         monkeypatch.setattr(pilot, name, value)

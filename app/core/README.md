@@ -2,6 +2,10 @@
 
 `config.py` loads validated environment settings; `security.py` handles password/token primitives; `logging.py` provides safe structured logs; `errors.py` defines typed errors and safe API mappings. The application must start with clear configuration errors when required settings are absent, without printing secret values.
 
+## LLM provider settings (D-055)
+
+`config.py` also holds typed provider settings: `LLM_PRIMARY_PROVIDER` (`ollama`), `LLM_FALLBACK_PROVIDER` (`groq`), `LLM_FALLBACK_ENABLED` (`false`), timeouts, output-token limit, retries, temperature, `OLLAMA_*` (base URL, model `qwen3.5:9b`, context 4096, thinking off, keep-alive) and `GROQ_*` (key as `SecretStr`, base URL, model `openai/gpt-oss-120b`). The Groq key is required only if Groq is the primary or fallback is enabled; placeholders count as unset; production rejects a public plain-http Ollama URL. These are configuration only: **no provider adapter exists**. Details: `docs/PROVIDER_READINESS.md`.
+
 ## Standard implementation specification
 
 ### 1. Module Purpose & Architectural Role

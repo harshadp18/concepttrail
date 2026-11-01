@@ -2,11 +2,23 @@
 
 The following sequence is adapted from the user-designated attached README. Execute in order. The Phase 0–7 grouping in the root README is a compact view; this detailed roadmap is authoritative. Start with inspection and a small rights-cleared pilot. Do not begin by fine-tuning an LLM or ingesting every textbook.
 
+## Status (updated 2026-10-31)
+
+| Item | Status |
+|---|---|
+| Extraction pilot (roadmap Phases 3–4 executed on 10 documents, 222 pages: extraction, selective OCR, cleaning, structuring, validation and human page review) | **Completed.** The project owner approved the pilot and its recorded quality-gate results on 2026-10-31. Scope is the pilot only; the full corpus has not been extracted. |
+| Teacher validation of generated objectives and topic lists | Completed through an owner attestation. Individual approval outcomes are not recorded and are kept distinct from completion. |
+| Human page-quality review | Completed through an owner attestation for the 22 reviewed pages. Individual findings are not recorded. |
+| Phase 5: knowledge components and prerequisite graph | **Engineering complete; not formally closed.** Loader, source resolution, review log and anchors, lifecycle, released snapshots, coverage, import tooling and pilot tooling are built and tested on synthetic data. Closure waits on owner decisions (D1–D18, R1–R7), real reviewers, the D4 and D11 pilots and curated data. See `PHASE_5_PROGRESS.md`. |
+| Provider adapters, embeddings, full-corpus extraction | Not started. Phase 5 is the next phase; its prerequisites have not been validated. |
+
+Approvals and attestations are private records; see `PUBLICATION_AND_REPRODUCIBILITY.md`. Open items from the pilot remain open and are not hidden by this status.
+
 ## Phase 0 — Inspect the actual backend repository and environment (read-only)
 
 **Objective:** identify what exists and avoid rebuilding it.
 
-**Read first:** root `CLAUDE.md`, root `README.md`, `docs/SOURCE_AUDIT.md`, relevant module READMEs, `docs/DATABASE_SCHEMA.md`.
+**Read first:** root `CLAUDE.md`, root `README.md`, `docs/PUBLIC_DECISIONS.md`, relevant module READMEs, `docs/DATABASE_SCHEMA.md`.
 
 **Actions:** capture tree/branch/commit; inspect backend dependencies, `.env.example`, routes, models, Alembic, tests and deployment; inspect any existing frontend only to record its location and API integration needs, without editing it; run existing backend tests; introspect PostgreSQL `concepttrail` schema read-only; classify features by evidence. Do not expose secrets.
 

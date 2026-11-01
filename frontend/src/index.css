@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-primary: #287a9f;
+  --brand-deep: #1b5f79;
+  --text-main: #444444;
+  --text-heading: #1f2937;
+  --bg-app: #f8fafb;
+  --sidebar-w: 88px;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--text-main);
+    background-color: var(--bg-app);
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--text-heading);
+    letter-spacing: -0.015em;
+  }
+  :lang(hi),
+  .font-hindi {
+    font-family: 'Noto Sans Devanagari', 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+@layer components {
+  /* Type scale: page title, section title, card title, body, caption */
+  .t-page {
+    @apply text-2xl sm:text-[28px] font-extrabold tracking-tight text-ctText-primary leading-tight;
+  }
+  .t-section {
+    @apply text-lg sm:text-xl font-bold text-ctText-primary leading-snug;
+  }
+  .t-card {
+    @apply text-base font-bold text-ctText-primary leading-snug;
+  }
+  .t-caption {
+    @apply text-xs text-ctText-muted;
+  }
+  .t-eyebrow {
+    @apply text-2xs font-bold uppercase tracking-[0.08em];
+  }
+
+  .card {
+    @apply bg-white rounded-2xl border border-surface-border shadow-card;
+  }
+  .card-pad {
+    @apply p-5 sm:p-6;
+  }
+  .card-hover {
+    @apply transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:shadow-elevated hover:border-brand-200;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl text-sm font-semibold whitespace-nowrap
+      transition-[background-color,color,box-shadow,transform] duration-150 active:scale-[0.98]
+      disabled:opacity-55 disabled:pointer-events-none focus-visible:outline-none focus-visible:shadow-focus;
+  }
+  .btn-sm {
+    @apply h-8 px-3.5 text-xs rounded-lg;
+  }
+  .btn-lg {
+    @apply h-12 px-6 text-base;
+  }
+  .btn-primary {
+    @apply bg-brand-500 text-white hover:bg-brand-700 shadow-sm;
+  }
+  .btn-secondary {
+    @apply bg-white text-brand-700 border border-brand-200 hover:bg-brand-50 hover:border-brand-300;
+  }
+  .btn-ghost {
+    @apply text-brand-700 hover:bg-brand-50;
+  }
+  .btn-danger {
+    @apply bg-white text-feedback-error border border-feedback-error-border hover:bg-feedback-error-bg;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-2xs font-semibold whitespace-nowrap;
+  }
+
+  .field-label {
+    @apply block text-xs font-semibold text-ctText-body mb-1.5;
+  }
+  .field {
+    @apply w-full h-11 px-4 rounded-xl border border-surface-border bg-white text-sm text-ctText-primary
+      placeholder:text-ctText-subtle transition-colors focus:outline-none focus:border-brand-400 focus:shadow-focus;
+  }
+  .field-select {
+    @apply h-10 pl-3 pr-8 rounded-xl border border-surface-border bg-white text-sm font-medium text-ctText-primary
+      focus:outline-none focus:border-brand-400 focus:shadow-focus;
+  }
+
+  .focus-ring {
+    @apply focus:outline-none focus-visible:shadow-focus;
+  }
+  .skeleton {
+    @apply bg-surface-muted rounded-lg animate-pulse;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+/* Accessibility preferences saved on the profile page (this device only) */
+html[data-text-size='medium'] {
+  font-size: 17px;
+}
+html[data-text-size='large'] {
+  font-size: 19px;
+}
+body.accessibility-line-spacing p,
+body.accessibility-line-spacing li {
+  line-height: 1.9 !important;
+}
+body.accessibility-high-contrast {
+  --text-main: #1f2937;
+}
+body.accessibility-high-contrast .text-ctText-muted,
+body.accessibility-high-contrast .text-ctText-subtle {
+  color: #374151 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

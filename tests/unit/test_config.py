@@ -90,9 +90,40 @@ def test_placeholder_secrets_are_treated_as_unset(value: str) -> None:
     assert settings.jwt_secret_key is None
 
 
+PRODUCTION = {
+    "app_env": "production",
+    "secret_key": STRONG_A,
+    "jwt_secret_key": STRONG_B,
+    "rate_limit_backend": "redis",
+    "redis_url": "rediss://cache.internal.example:6380/0",
+    "trusted_hosts": "api.school.example",
+    "cors_allowed_origins": "https://app.school.example",
+}
+
+
+@pytest.mark.parametrize(
+    ("url", "ok"),
+    [
+        ("redis://:pw@redis:6379/0", True),  # compose service name on a private network
+        ("redis://10.1.2.3:6379/0", True),
+        ("rediss://cache.example.com:6380/0", True),
+        ("redis://cache.example.com:6379/0", False),  # plain text to a public name
+    ],
+)
+def test_production_redis_transport(url: str, ok: bool) -> None:
+    values = {**PRODUCTION, "redis_url": url}
+    if ok:
+        assert make(**values).redis_url is not None
+    else:
+        with pytest.raises(ConfigurationError, match="REDIS_URL must use rediss"):
+            make(**values)
+
+
 def test_valid_production_settings() -> None:
-    settings = make(app_env="production", secret_key=STRONG_A, jwt_secret_key=STRONG_B)
+    settings = make(**PRODUCTION)
     assert settings.app_env == "production"
+    assert settings.docs_enabled is False
+    assert settings.cors_origins == ["https://app.school.example"]
 
 
 @pytest.mark.parametrize(
@@ -104,14 +135,19 @@ def test_valid_production_settings() -> None:
         ({"jwt_secret_key": "CHANGE_ME"}, "JWT_SECRET_KEY is required"),
         ({"secret_key": "too-short"}, "at least 32 characters"),
         ({"jwt_secret_key": STRONG_A}, "must differ"),
+        ({"content_release_mode": "demo"}, "CONTENT_RELEASE_MODE=demo is allowed only"),
+        ({"rate_limit_backend": "memory"}, "RATE_LIMIT_BACKEND=redis and REDIS_URL"),
+        ({"redis_url": None}, "RATE_LIMIT_BACKEND=redis and REDIS_URL"),
+        ({"redis_url": "redis://cache.example.com:6379/0"}, "REDIS_URL must use rediss"),
+        ({"cors_allowed_origins": "http://app.school.example"}, "must be https origins"),
+        ({"cors_allowed_origins": "*"}, "never '\\*'"),
+        ({"trusted_hosts": ""}, "TRUSTED_HOSTS must list"),
+        ({"trusted_hosts": "*"}, "TRUSTED_HOSTS must list"),
+        ({"api_docs_enabled": True}, "API_DOCS_ENABLED must be false"),
     ],
 )
 def test_production_requirements(overrides: dict[str, object], reason: str) -> None:
-    values: dict[str, object] = {
-        "app_env": "production",
-        "secret_key": STRONG_A,
-        "jwt_secret_key": STRONG_B,
-    }
+    values: dict[str, object] = dict(PRODUCTION)
     values.update(overrides)
     with pytest.raises(ConfigurationError, match=reason) as excinfo:
         make(**values)

@@ -1,0 +1,112 @@
+{
+  "spec_id": "provider-smoke-cases/1",
+  "decision": "D-055",
+  "status": "design_only_not_run",
+  "run_policy": "Run only on explicit instruction after the adapters exist. Synthetic inputs only.",
+  "data_policy": {
+    "textbook_content": false,
+    "student_personal_data": false,
+    "external_calls_made_by_this_file": 0
+  },
+  "scoring_policy": "Deterministic checks only. No LLM scores anything. Educator review decides quality.",
+  "providers": [
+    {"provider": "ollama", "model": "qwen3.5:9b", "role": "primary", "options": {"num_ctx": 4096, "think": false}},
+    {"provider": "groq", "model": "openai/gpt-oss-120b", "role": "fallback_candidate_manual_only"}
+  ],
+  "answer_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["language", "final_answer", "steps"],
+    "properties": {
+      "language": {"enum": ["en", "hi"]},
+      "final_answer": {"type": "string", "minLength": 1},
+      "steps": {"type": "array", "items": {"type": "string"}, "minItems": 1}
+    }
+  },
+  "cases": [
+    {
+      "case_id": "SMOKE-ARITH-01",
+      "task": "arithmetic",
+      "class_level": null,
+      "language": "en",
+      "prompt": "What is 27 multiplied by 14? Give the final answer as a number and show the steps.",
+      "deterministic_checks": [{"type": "integer_answer_equals", "value": 378}],
+      "human_review": false
+    },
+    {
+      "case_id": "SMOKE-FRAC-01",
+      "task": "explanation",
+      "class_level": 7,
+      "language": "en",
+      "prompt": "Explain to a Class 7 student how to add 3/4 and 2/3.",
+      "deterministic_checks": [
+        {"type": "contains_any", "values": ["17/12"]},
+        {"type": "contains_any", "values": ["1 5/12", "1 5/12", "1 and 5/12", "1 5/12"]},
+        {"type": "min_steps", "value": 2}
+      ],
+      "human_review": true,
+      "human_review_focus": ["age-appropriate language", "correct method (common denominator 12)"]
+    },
+    {
+      "case_id": "SMOKE-SCI-01",
+      "task": "explanation",
+      "class_level": 8,
+      "language": "en",
+      "prompt": "Explain photosynthesis to a Class 8 student in simple words.",
+      "deterministic_checks": [
+        {"type": "contains_concept_groups", "groups": [["sunlight", "light"], ["chlorophyll"], ["carbon dioxide", "CO2", "CO₂"], ["water"], ["glucose", "food", "sugar"], ["oxygen"]]},
+        {"type": "max_chars", "value": 1500}
+      ],
+      "human_review": true,
+      "human_review_focus": ["scientific accuracy", "simplicity", "age appropriateness"]
+    },
+    {
+      "case_id": "SMOKE-HI-01",
+      "task": "explanation",
+      "class_level": 8,
+      "language": "hi",
+      "prompt": "कक्षा 8 के विद्यार्थी को सरल शब्दों में समझाइए: प्रकाश संश्लेषण क्या है?",
+      "deterministic_checks": [
+        {"type": "devanagari_letter_share_at_least", "value": 0.6},
+        {"type": "no_replacement_character"},
+        {"type": "no_doubled_virama_or_repeated_vowel_sign"},
+        {"type": "contains_any", "values": ["प्रकाश संश्लेषण"]},
+        {"type": "contains_any", "values": ["क्लोरोफिल", "पर्णहरित"]}
+      ],
+      "human_review": true,
+      "human_review_focus": ["natural Hindi", "correct terminology", "spacing and grammar", "scientific accuracy"]
+    },
+    {
+      "case_id": "SMOKE-SCHEMA-01",
+      "task": "structured_output_validation",
+      "offline": true,
+      "payloads": [
+        {"name": "valid", "payload": {"language": "en", "final_answer": "378", "steps": ["27 x 14 = 378"]}, "expect_valid": true},
+        {"name": "missing_field", "payload": {"language": "en", "final_answer": "378"}, "expect_valid": false},
+        {"name": "extra_field", "payload": {"language": "en", "final_answer": "378", "steps": ["a"], "score": 1}, "expect_valid": false},
+        {"name": "wrong_type", "payload": {"language": "en", "final_answer": 378, "steps": ["a"]}, "expect_valid": false},
+        {"name": "empty_steps", "payload": {"language": "en", "final_answer": "378", "steps": []}, "expect_valid": false},
+        {"name": "malformed_json", "raw": "{\"language\": \"en\", \"final_answer\": \"378\", ", "expect_valid": false}
+      ]
+    }
+  ],
+  "performance_metrics": [
+    "time_to_first_token_ms (streaming only)",
+    "total_response_ms",
+    "output_tokens",
+    "tokens_per_second",
+    "model_load_ms (ollama)",
+    "memory_pressure (ollama host, where available)"
+  ],
+  "repeat_policy": "Run each case several times on cold and warm models before drawing conclusions.",
+  "preliminary_owner_reported_observations": {
+    "nature": "single runs; not a benchmark or certification",
+    "qwen3.5:9b": [
+      {"case": "english_structured_maths", "tokens_per_second": 36.74, "response_seconds": 6.06, "note": "3/4 + 2/3 correct"},
+      {"case": "hindi_structured_science", "tokens_per_second": 34.31, "response_seconds": 14.88, "note": "spacing and scientific-explanation problems observed"}
+    ],
+    "groq_gpt_oss_120b": [
+      {"case": "synthetic_connectivity", "http_status": 200, "total_tokens": 137, "response_seconds": 0.61}
+    ]
+  }
+}

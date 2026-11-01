@@ -178,7 +178,7 @@ PDF checks read bytes only (SHA-256 and the 5-byte signature). Paths come from t
 - Permission values are `permitted`, `not_permitted` and `permission_required`; only `permitted` (with `rights_status=approved`) opens a gate.
 - `external_model_processing` and `redistribution` have no column in the 29-column inventory, so they stay unauthorised.
 - The pipeline never edits permission fields.
-- The owner's hackathon-use assertion (`docs/DECISIONS.md` D-031) is recorded in the manifest and the merge proposal, but it is not applied to any field.
+- The owner's hackathon-use assertion (kept in the owner's private records) is recorded in the manifest and the merge proposal, but it is not applied to any field.
 
 ### Outputs, idempotency and reconciliation
 
@@ -232,6 +232,8 @@ OCR is enabled (`config.yaml` `ocr.enabled: true`, languages `eng`, `hin`; D-043
 | `inspection_pack.py` | Renders representative pages, every OCR page, the most-affected virama pages and best/worst OCR examples next to raw, markup, normalised and OCR text; writes `decisions.md` |
 | `stages/repair_devanagari.py` | D-044 same-glyph Devanagari repair for approved source IDs: a repaired copy of the raw blocks for normalisation, a per-correction log, review flags for residue (never auto-corrected) |
 | `hindi_diagnostics.py` | Glyph-level diagnosis of doubled Devanagari code points; D-040 and D-044 previews with OCR agreement and before/after word pairs; never changes pipeline text |
+| `owner_attestations.py` | Write-once, evidence-bound owner records that close the pilot: the D-053 page-review attestation and the Phase 4 pilot sign-off. `record-d053`, `record-signoff` and `verify` (reports `valid`, `stale`, `absent` or `invalid`; fails closed). Never edits the AI-assisted review evidence. |
+| `teacher_validation.py` | Owner attestation that teacher validation is complete (D-054): records review completion apart from approval outcome, binds to digests of objective IDs/text/evidence and of the numbered topic lists, never invents outcomes; `python -m data_pipeline.teacher_validation record` (write-once, idempotent). |
 | `build_pilot_enriched_csv.py` | Derived 29-column CSV of the 10 pilot rows from the hash-verified cleaned CSV, plus status, changes and manifest sidecars |
 | `triage_review_queue.py` | Rule-based triage of the hash-pinned 45-item baseline review queue |
 
@@ -254,6 +256,7 @@ OCR is enabled (`config.yaml` `ocr.enabled: true`, languages `eng`, `hin`; D-043
 - **Enrichment never fills the master:** proposals live in `data/processed/metadata_enrichment/`. In the derived pilot CSV a value appears only when it is a single `verified`, `source_explicit` or `human_approved` value and the cleaned cell is empty. Derived objectives remain candidates, and several topics stay in `topic_mapping.csv` (one canonical row per PDF).
 - **Hindi repair (D-044):** only for `devanagari_repair.source_ids` in `config.yaml`. Raw text never changes; normalised text records `devanagari_repair` per page, with the flagged residue.
 - **Objectives:** official > self-contained textbook statement > owner-approved AI-generated (grounded in chapter text, `pending_teacher_review`, D-049) > derived candidate.
+- **Teacher validation (D-054):** the 51 AI-generated objectives and the numbered topic lists carry `review_completion=completed_owner_attested` and `approval_outcome=not_individually_recorded` until real per-item outcomes are supplied. Nothing is marked approved. OCR/page quality review (D-053) is separate.
 - **Topics:** only numbered headings become topics. Large unnumbered type, prose fragments and out-of-sequence numbered lines are `heading_candidate` only (D-045).
 - **Acquisition dates are never inferred:** file times, macOS quarantine (transfer) timestamps, PDF production dates and pipeline dates are rejected as acquisition evidence.
 
@@ -262,3 +265,7 @@ Tests:
 - integration: `tests/integration/test_extraction_pilot.py`.
 
 All tests use synthetic PDFs only.
+
+## KC and prerequisite graph (`kc_graph/`, Phase 5, implemented 2026-10-31)
+
+`python -m data_pipeline.kc_graph <command>` loads the two curated CSVs (`data/curated/kc_graph/kc_components.csv`, `prerequisites.csv`; exact owner-instructed headers), resolves source tokens against the cleaned inventory and the existing normalised artifacts (read-only; rights gate `local_text_normalization`), verifies the private review and lifecycle logs (`data/overrides/kc_review/`), reports to `data/logs/kc_graph/`, and releases write-once graph snapshots to `data/final/kc_graph/`. Default commands are read-only; the database is written only by `import-execute` with an owner approval bound to one exact plan. Model drafting (`drafting.py`) is refused until a separate D17 rights record exists. The older header-only `data/final/kc_components.csv` and `prerequisites.csv` placeholders are not used. Contract: `docs/PHASE_5_CSV_CONTRACT.md`; operation: `docs/PHASE_5_REVIEW_GUIDELINES.md` section 11; status: `docs/PHASE_5_PROGRESS.md`.

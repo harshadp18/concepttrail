@@ -3,6 +3,8 @@
 .env.*
 !.env.example
 CLAUDE.local.md
+# Private local credentials for synthetic development accounts (never commit)
+.local/
 
 # Python
 .venv/
@@ -83,10 +85,14 @@ docs/reports/
 docs/DECISIONS.md
 docs/SOURCE_AUDIT.md
 
-# Unfinished Phase 4 reconciliation implementation
-data_pipeline/teacher_validation.py
-
 # Generated curriculum and question-bank datasets: publish only after review
 data_pipeline/data/final/**
 !data_pipeline/data/final/README.md
 !data_pipeline/data/final/.gitkeep
+
+# Curated, reviewed KC and prerequisite sources (private; publish only after review)
+data_pipeline/data/curated/**
+!data_pipeline/data/curated/
+!data_pipeline/data/curated/**/
+!data_pipeline/data/curated/**/README.md
+!data_pipeline/data/curated/**/.gitkeep

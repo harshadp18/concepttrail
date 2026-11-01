@@ -7,7 +7,7 @@
 | All-class/all-subject coverage too broad for one pilot | Misleading support claims | Maintain all 25 class-subject combinations and per-chapter status; pilot does not equal coverage |
 | `subject_id VARCHAR` vs older INTEGER discussion | Migration inconsistency | Preserve executed schema; explicit migration only after owner approval |
 | Embedding model/dimension not selected | Wrong index dimensions or incompatible vectors | Benchmark first; preserve unbounded `VECTOR`; rebuild indexes version-safely |
-| Gemini/Groq/DeepSeek availability, terms and model IDs change | Outage, unexpected cost or data-use risk | Verify live account/model/terms; Groq fallback disabled pending tests; DeepSeek benchmark-only |
+| Gemini/Groq/DeepSeek availability, terms and model IDs change | Outage, unexpected cost or data-use risk | Verify live account/model/terms; Groq fallback disabled pending tests; DeepSeek benchmark-only **[Superseded 2026-10-31 by D-055: Qwen 3.5 9B via local Ollama is the primary and Groq GPT-OSS 120B the disabled fallback candidate; Gemini and DeepSeek are not selected.]** |
 | BKT priors/thresholds are illustrative | Poor calibration or misleading learner status | Centralise versioned configuration; evaluate separately from quiz-score policy |
 | Multi-KC item has one overall score | Evidence can be misattributed to several KCs | Require KC-specific component scoring; otherwise update only the designated primary KC or do not use item for BKT |
 | Bell-Ringer persistence not represented in 26-table schema | Draft/approval/audit state cannot be safely persisted in current contract | Implement draft logic only in an approved persistence design; propose migration; never add table silently |
@@ -24,8 +24,8 @@
 1. Confirm the fourth derived CSV name and exact columns (`notes.csv` is the current proposal).
 2. Approve any desired schema evolution, including Bell-Ringer activity/approval persistence.
 3. Select an embedding model, revision, dimension, normalization and distance metric after benchmark.
-4. Confirm Gemini model ID/account, permitted data use and retention terms.
-5. Decide whether/when Groq fallback should be activated after acceptance tests; keep DeepSeek benchmark-only until selected.
+4. Confirm Gemini model ID/account, permitted data use and retention terms. **[Superseded 2026-10-31 by D-055: Qwen 3.5 9B via local Ollama is the primary and Groq GPT-OSS 120B the disabled fallback candidate; Gemini and DeepSeek are not selected.]**
+5. Decide whether/when Groq fallback should be activated after acceptance tests; keep DeepSeek benchmark-only until selected. **[Superseded 2026-10-31 by D-055: Qwen 3.5 9B via local Ollama is the primary and Groq GPT-OSS 120B the disabled fallback candidate; Gemini and DeepSeek are not selected.]**
 6. Supply the PRD or approved UI specification and actual frontend repository, if available.
 7. Confirm authentication and classroom onboarding details with the school; no parent role is assumed in the current three-role schema.
 8. Record source-specific rights for processing, external model calls, indexing/RAG, training, display and redistribution.

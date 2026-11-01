@@ -6,6 +6,7 @@
 - Use internal UUID/pseudonymous IDs in model prompts; do not send names, emails, phone numbers, school identifiers or auth credentials to providers.
 - Do not log full student messages or response content by default. Use request IDs and safe operational metadata.
 - Define retention/deletion, account offboarding, export and backup policies before a student pilot.
+- Tutor conversation history (`DOUBT_HISTORY_ENABLED`, proposed migration 0003) stores student-written questions. It is off by default; before enabling it for a pilot the owner must decide retention, deletion and parent/school notice. Rows are readable only by the owning learner (another learner's conversation is "not found"), are bounded to 40 messages per conversation, are never sent to a model provider beyond the single request's prompt, and "archive" hides a conversation without deleting it. Teachers cannot read them through the API.
 - Restrict teacher dashboard queries to assigned classrooms and enforce access on the backend, not only in the UI.
 - Review applicable Indian child-data/privacy requirements, consent/authority, school responsibilities and provider terms with qualified advisors before production use. This document is an engineering checklist, not legal advice.
 
