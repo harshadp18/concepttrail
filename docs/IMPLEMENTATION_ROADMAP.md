@@ -44,7 +44,7 @@ ruff format --check .
 
 ## Phase 2 — Resource intake, teammate CSV cleaning and master curriculum/source inventory
 
-**Read first:** `resources/README.md`, `resources/textbook_pdfs/README.md`, `resources/teammate_csv/README.md`, `resources/teammate_csv/incoming/README.md`, `docs/CSV_CLEANING_SPEC.md`, `data_pipeline/README.md`, `data_pipeline/stages/README.md`.
+**Read first:** `docs/TECHNICAL_REFERENCE.md` (section 11), `docs/CSV_CLEANING_SPEC.md`.
 
 **User hand-off:** the user copies original textbook PDFs into `resources/textbook_pdfs/` and the teammate's CSV file(s) into `resources/teammate_csv/incoming/`. Do not request the user to pre-clean or rename files.
 

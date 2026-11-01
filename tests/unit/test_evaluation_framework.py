@@ -336,6 +336,7 @@ def test_retrieval_scorer_ignores_non_human_labels_and_scores_the_rest() -> None
 
 
 def test_benchmark_readme_documents_every_catalogue_metric() -> None:
-    text = (run.BENCH.parent / "README.md").read_text(encoding="utf-8")
+    # the technical reference documents the metric catalogue
+    text = (run.BENCH.parents[2] / "docs/TECHNICAL_REFERENCE.md").read_text(encoding="utf-8")
     for metric in CATALOG:
         assert f"`{metric.id}`" in text, metric.id

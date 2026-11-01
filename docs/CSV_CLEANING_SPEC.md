@@ -64,7 +64,7 @@ Exact duplicate policy must be selected and documented per dataset. Default: fla
 > - the manifest, `decisions.jsonl` and reconciliation ledger to `processed/manifests/`;
 > - the field mapping and merge proposal to `resources/teammate_csv/mappings/`.
 >
-> The immutable snapshot path below is unchanged. Rows are `accepted`, `rejected` or `quarantined`, so reconciliation is `input = accepted + rejected + quarantined`. File-level contents match this table; see `data_pipeline/README.md`.
+> The immutable snapshot path below is unchanged. Rows are `accepted`, `rejected` or `quarantined`, so reconciliation is `input = accepted + rejected + quarantined`. File-level contents match this table; see `docs/TECHNICAL_REFERENCE.md` (section 11).
 
 | Artifact | Path | Required contents |
 |---|---|---|

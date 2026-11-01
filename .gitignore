@@ -57,8 +57,10 @@ data_pipeline/data/logs/**
 # Teammate CSV cleaning outputs and merge proposals are generated, private artifacts
 resources/teammate_csv/processed/**
 !resources/teammate_csv/processed/README.md
+!resources/teammate_csv/processed/.gitkeep
 resources/teammate_csv/mappings/**
 !resources/teammate_csv/mappings/README.md
+!resources/teammate_csv/mappings/.gitkeep
 
 # Private owner decisions, authorization records and generated review evidence
 data_pipeline/data/overrides/**

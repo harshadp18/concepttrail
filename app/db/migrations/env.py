@@ -8,7 +8,8 @@
 - Reflection is limited to the `concepttrail` schema, so pgvector objects and Alembic's
   own table in `public` are never compared with the application metadata.
 
-Read app/db/migrations/README.md before running any command against a real database.
+Read docs/TECHNICAL_REFERENCE.md (section 6, "Database") before running any command against a
+real database.
 """
 
 from __future__ import annotations

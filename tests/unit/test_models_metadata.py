@@ -12,8 +12,9 @@ from sqlalchemy.schema import CreateIndex, CreateTable
 
 from app.db.session import DB_SCHEMA
 
-# The agreed 26-table contract (root CLAUDE.md / docs/DATABASE_SCHEMA.md), listed independently
-# of the baseline file so that a regenerated baseline cannot silently change the table set.
+# The agreed 26-table contract (docs/TECHNICAL_REFERENCE.md, docs/DATABASE_SCHEMA.md), listed
+# independently of the baseline file so that a regenerated baseline cannot silently change the
+# table set.
 EXPECTED_TABLES = {
     "subject",
     "curriculum_version",

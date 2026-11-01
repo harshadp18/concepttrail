@@ -7,7 +7,7 @@
 3. Install/enable the Claude Code extension or CLI according to the current official docs.
 4. Confirm Claude Code can see the workspace root and terminal. Start with read-only reconnaissance; do not authorize destructive shell/database actions.
 
-Claude Code uses project instructions such as root `CLAUDE.md` for persistent repository context. Keep that file concise and commit it. Module-specific `app/CLAUDE.md` and `data_pipeline/CLAUDE.md` hold targeted constraints when Claude works in those paths. See the official [Claude Code memory docs](https://code.claude.com/docs/en/memory) and [VS Code guide](https://code.claude.com/docs/en/vs-code).
+The repository keeps a single `README.md` (overview); section 16 of `docs/TECHNICAL_REFERENCE.md` ("Engineering rules") holds the persistent rules an AI assistant must follow, and there are no `CLAUDE.md` or per-folder README files. See the official [Claude Code memory docs](https://code.claude.com/docs/en/memory) and [VS Code guide](https://code.claude.com/docs/en/vs-code).
 
 ## 2. First prompt to Claude Code
 
@@ -97,7 +97,7 @@ Claude Code may edit code and run safe local tests. Require owner confirmation b
 ### Teammate CSV cleaning and PDF cross-check
 
 ```text
-Read resources/README.md and docs/CSV_CLEANING_SPEC.md. The user has copied original PDF resources to resources/textbook_pdfs/ and teammate CSV exports to resources/teammate_csv/incoming/. First create a byte-identical hash-addressed raw snapshot. Profile that snapshot without modifying it, then write a data-quality report. Do not assume the CSV is the curriculum inventory. Define explicit schema, field mapping, null-token and duplicate rules from the actual file. Preserve source columns/order, leading-zero IDs and Unicode. Write accepted and rejected records separately with reason codes and reconcile every input row. Compare selected values against the matching PDFs only after confirming the source pairing and permitted internal processing. Keep mismatches for human review; do not autofill. Do not overwrite the raw files or data_pipeline/curriculum.csv. Add fixtures and idempotency tests.
+Read docs/TECHNICAL_REFERENCE.md (section 11) and docs/CSV_CLEANING_SPEC.md. The user has copied original PDF resources to resources/textbook_pdfs/ and teammate CSV exports to resources/teammate_csv/incoming/. First create a byte-identical hash-addressed raw snapshot. Profile that snapshot without modifying it, then write a data-quality report. Do not assume the CSV is the curriculum inventory. Define explicit schema, field mapping, null-token and duplicate rules from the actual file. Preserve source columns/order, leading-zero IDs and Unicode. Write accepted and rejected records separately with reason codes and reconcile every input row. Compare selected values against the matching PDFs only after confirming the source pairing and permitted internal processing. Keep mismatches for human review; do not autofill. Do not overwrite the raw files or data_pipeline/curriculum.csv. Add fixtures and idempotency tests.
 ```
 
 ### Backend-only scope

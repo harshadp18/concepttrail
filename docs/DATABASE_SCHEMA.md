@@ -148,4 +148,4 @@ Implemented 2026-10-31:
 - Baseline revision `0001` builds this exact schema from an empty database and was verified on disposable databases.
 - The owner's database matches `0001` with zero differences (read-only comparison), but it is **not stamped**. Stamping needs explicit owner approval.
 
-Procedures are in `app/db/migrations/README.md`.
+Procedures are in `docs/TECHNICAL_REFERENCE.md` (section 6, "Database").

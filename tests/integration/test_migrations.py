@@ -1,7 +1,7 @@
 """Alembic baseline lifecycle on throwaway databases of a DISPOSABLE PostgreSQL server.
 
 Requires CONCEPTTRAIL_MIGRATION_TEST_ADMIN_URL: a superuser URL for the maintenance database
-of a disposable server (app/db/migrations/README.md, "Disposable database testing"). Each
+of a disposable server (docs/TECHNICAL_REFERENCE.md, section 6 "Database"). Each
 test creates its own `ct_migtest_<random>` databases and drops only those afterwards.
 
 The suite refuses to run against a server that hosts the development database

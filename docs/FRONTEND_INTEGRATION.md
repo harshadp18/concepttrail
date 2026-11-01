@@ -1,6 +1,6 @@
 # Frontend integration guide
 
-The React frontend lives in [`frontend/`](../frontend/README.md) (owner instruction, 2026-11-01).
+The React frontend lives in [`frontend/`](../README.md) (owner instruction, 2026-11-01).
 Local start-up commands are in [`LOCAL_DEVELOPMENT.md`](LOCAL_DEVELOPMENT.md); the visual and
 functional audit is in [`FRONTEND_UI_AUDIT.md`](FRONTEND_UI_AUDIT.md).
 The authoritative, generated contract is [`docs/openapi/openapi-v1.json`](openapi/openapi-v1.json)

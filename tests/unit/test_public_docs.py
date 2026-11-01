@@ -92,15 +92,23 @@ def test_the_public_register_is_complete_and_makes_no_adapter_claim(pages: dict[
     ):
         assert required in text, required
     assert "attest" not in text.lower()  # no private owner records in the public register
-    assert "PUBLIC_DECISIONS.md" in pages["docs/README.md"]
+    # the technical reference indexes the docs
+    assert "PUBLIC_DECISIONS.md" in pages["docs/TECHNICAL_REFERENCE.md"]
 
 
 def test_active_provider_text_names_the_current_architecture(pages: dict[str, str]) -> None:
-    claude = pages["CLAUDE.md"]
-    assert "Qwen 3.5 9B" in claude and "Gemini Flash is the proposed primary" not in claude
-    for rel in ("README.md", "docs/AI_AND_PROVIDER_STRATEGY.md", "docs/PROVIDER_READINESS.md"):
+    readme = pages["docs/TECHNICAL_REFERENCE.md"]
+    assert "Qwen 3.5 9B" in readme and "Gemini Flash is the proposed primary" not in readme
+    for rel in (
+        "docs/TECHNICAL_REFERENCE.md",
+        "docs/AI_AND_PROVIDER_STRATEGY.md",
+        "docs/PROVIDER_READINESS.md",
+    ):
         assert "qwen3.5:9b" in pages[rel] and "openai/gpt-oss-120b" in pages[rel], rel
-    for rel in ("docs/PROVIDER_READINESS.md", "app/services/README.md", "CLAUDE.md"):
+    # The local Ollama adapter exists (app/services/llm.py); no cloud (Groq) adapter does.
+    assert re.search(r"no Groq \(cloud\) adapter exists", readme), "TECHNICAL_REFERENCE"
+    assert "LLM_FALLBACK_ENABLED=false" in readme
+    for rel in ("docs/PROVIDER_READINESS.md",):
         assert re.search(
             r"no (?:Ollama or Groq |provider )?adapter (?:exists|has been (?:implemented|written))"
             r"|none of the modules",

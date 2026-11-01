@@ -201,7 +201,7 @@ Verified (human-approved) coverage: **0/25**. Demo coverage is one chapter per c
   `tests/unit/test_review_api_live.py`, `tests/integration/test_interventions_disposable.py`,
   this file. Modified: `app/main.py`, `app/core/config.py`, `app/services/learner_scope.py`,
   `app/services/ai_generation.py`, `scripts/release_gate.py`, `evaluation/catalog.py`,
-  `evaluation/benchmarks/README.md`, `evaluation/benchmarks/v1/manifest.json`,
+  `docs/TECHNICAL_REFERENCE.md` (section 13), `evaluation/benchmarks/v1/manifest.json`,
   `docs/FRONTEND_INTEGRATION.md`, `docs/openapi/openapi-v1.json`, and tests
   (`test_evaluation_framework.py`, `test_evaluation_tools.py`, `test_ai_adaptive_graph.py`,
   `test_openapi_export.py`, `test_release_gate_live.py`).
@@ -225,7 +225,7 @@ Verified (human-approved) coverage: **0/25**. Demo coverage is one chapter per c
 ## 10. Remaining engineering work
 
 - Frontend implementation and integration (contract: `docs/FRONTEND_INTEGRATION.md`, OpenAPI).
-- Deployment and production infrastructure (`deploy/README.md`).
+- Deployment and production infrastructure (`deploy/`).
 
 Everything else that remains is blocked on the external dependencies above, not on local code.
 The production release gate (`python -m scripts.release_gate`) correctly fails all seven gates.
